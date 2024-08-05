@@ -11,9 +11,18 @@ source ${SRC_DIR}/find_port.sh
 # Write server url to file
 hostname=${SLURMD_NODENAME}
 vllm_port_number=$(find_available_port $hostname 8080 65535)
+vllm_base_url=http://${hostname}:${vllm_port_number}/v1
 
-echo "Server address: http://${hostname}:${vllm_port_number}/v1"
-echo "http://${hostname}:${vllm_port_number}/v1" > ${VLLM_BASE_URL_FILENAME}
+echo "Server address: ${vllm_base_url}"
+echo ${vllm_base_url} > ${VLLM_BASE_URL_FILENAME}
+
+# Start callback watcher in background 
+if [[ -z ${telemetry_callback_url} ]]; then
+    python3 callback.py \
+    --openai_base_url ${vllm_base_url} \
+    --telemetry_callback_url ${telemetry_callback_url} \
+    &
+fi
 
 # Activate vllm venv
 if [ "$VENV_BASE" = "singularity" ]; then

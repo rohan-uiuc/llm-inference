@@ -70,9 +70,18 @@ done
 
 
 vllm_port_number=$(find_available_port $head_node_ip 8080 65535)
+vllm_base_url=http://${head_node_ip}:${vllm_port_number}/v1
 
-echo "Server address: http://${head_node_ip}:${vllm_port_number}/v1"
-echo "http://${head_node_ip}:${vllm_port_number}/v1" > ${VLLM_BASE_URL_FILENAME}
+# Start callback watcher in background 
+if [[ -z ${telemetry_callback_url} ]]; then
+    python3 callback.py \
+    --openai_base_url ${vllm_base_url} \
+    --telemetry_callback_url ${telemetry_callback_url} \
+    &
+fi
+
+echo "Server address: ${vllm_base_url}"
+echo ${vllm_base_url} > ${VLLM_BASE_URL_FILENAME}
 
 # Activate vllm venv
 if [ "$VENV_BASE" = "singularity" ]; then    
