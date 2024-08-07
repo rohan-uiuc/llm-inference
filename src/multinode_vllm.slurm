@@ -72,11 +72,12 @@ done
 vllm_port_number=$(find_available_port $head_node_ip 8080 65535)
 vllm_base_url=http://${head_node_ip}:${vllm_port_number}/v1
 
-# Start callback watcher in background 
-if [[ -z ${TELEMETRY_CALLBACK_URL} ]]; then
-    python3 callback.py \
+# Start callback watcher in background
+if [[ ! -z ${TELEMETRY_CALLBACK_URL} ]]; then
+    echo TELEMETRY_CALLBACK_URL: $TELEMETRY_CALLBACK_URL
+    python3 ${SRC_DIR}/callback.py \
     --openai_base_url ${vllm_base_url} \
-    --TELEMETRY_CALLBACK_URL ${TELEMETRY_CALLBACK_URL} \
+    --telemetry_callback_url ${TELEMETRY_CALLBACK_URL} \
     &
 fi
 

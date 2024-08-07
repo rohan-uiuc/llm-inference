@@ -16,11 +16,12 @@ vllm_base_url=http://${hostname}:${vllm_port_number}/v1
 echo "Server address: ${vllm_base_url}"
 echo ${vllm_base_url} > ${VLLM_BASE_URL_FILENAME}
 
-# Start callback watcher in background 
-if [[ -z ${TELEMETRY_CALLBACK_URL} ]]; then
-    python3 callback.py \
+# Start callback watcher in background
+if [[ ! -z ${TELEMETRY_CALLBACK_URL} ]]; then
+    echo TELEMETRY_CALLBACK_URL: $TELEMETRY_CALLBACK_URL
+    python3 ${SRC_DIR}/callback.py \
     --openai_base_url ${vllm_base_url} \
-    --TELEMETRY_CALLBACK_URL ${TELEMETRY_CALLBACK_URL} \
+    --telemetry_callback_url ${TELEMETRY_CALLBACK_URL} \
     &
 fi
 
