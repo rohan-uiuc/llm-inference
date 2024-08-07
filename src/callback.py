@@ -72,4 +72,5 @@ if __name__ == "__main__":
         "model_list": model_list,
         "api_base_url": openai_base_url,
     }
+    logger.info(f"sending telemetry to {openai_base_url}: {telemetry_data}")
     requests.post(telemetry_callback_url, json=telemetry_data)
