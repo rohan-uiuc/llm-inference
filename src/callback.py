@@ -5,6 +5,7 @@ Script for reporting OpenAI base URL and model info to e.g., KScope when ready.
 from typing import Any
 
 import argparse
+import os
 import requests
 
 parser = argparse.ArgumentParser()
@@ -60,6 +61,7 @@ if __name__ == "__main__":
         model_list = get_openai_model_list(openai_base_url)
 
     telemetry_data = {
+        "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
         "model_list": model_list,
         "api_base_url": openai_base_url,
     }
