@@ -5,8 +5,10 @@ Script for reporting OpenAI base URL and model info to e.g., KScope when ready.
 from typing import Any
 
 import argparse
+import logging
 import os
 import requests
+import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--openai_base_url")
@@ -52,6 +54,9 @@ def get_openai_model_list(openai_base_url: str) -> list[dict[str, Any]] | None:
 
 if __name__ == "__main__":
     args = parser.parse_args()
+    logger = logging.getLogger("vector_inference_callback")
+    logging.basicConfig(level=logging.INFO)
+
     openai_base_url = args.openai_base_url
     telemetry_callback_url = args.telemetry_callback_url
 
@@ -59,6 +64,8 @@ if __name__ == "__main__":
 
     while (model_list is None) or (len(model_list) == 0):
         model_list = get_openai_model_list(openai_base_url)
+        logger.info(f"model_list: {model_list}")
+        time.sleep(10)
 
     telemetry_data = {
         "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
