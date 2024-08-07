@@ -17,10 +17,10 @@ echo "Server address: ${vllm_base_url}"
 echo ${vllm_base_url} > ${VLLM_BASE_URL_FILENAME}
 
 # Start callback watcher in background 
-if [[ -z ${telemetry_callback_url} ]]; then
+if [[ -z ${TELEMETRY_CALLBACK_URL} ]]; then
     python3 callback.py \
     --openai_base_url ${vllm_base_url} \
-    --telemetry_callback_url ${telemetry_callback_url} \
+    --telemetry_callback_url ${TELEMETRY_CALLBACK_URL} \
     &
 fi
 
