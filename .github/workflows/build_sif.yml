@@ -7,27 +7,27 @@ on:
 
 jobs:
   build-singularity-image:
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Install Prerequisites
         run: |
-          sudo apt-get update && sudo apt-get install -y \                                                                     
-            autoconf \                                                                                                                  
-            automake \                                                                                                                  
-            cryptsetup \                                                                                                                
-            fuse \                                                                                                                      
-            fuse2fs \                                                                                                                   
-            git \                                                                                                                       
-            libfuse-dev \                                                                                                               
-            libglib2.0-dev \                                                                                                            
-            libseccomp-dev \                                                                                                            
-            libtool \                                                                                                                   
-            pkg-config \                                                                                                                
-            runc \                                                                                                                      
-            squashfs-tools \                                                                                                            
-            squashfs-tools-ng \                                                                                                         
-            uidmap \                                                                                                                    
-            wget \                                                                                                                      
+          sudo apt-get update && sudo apt-get install \
+            autoconf \
+            automake \
+            cryptsetup \
+            fuse \
+            fuse2fs \
+            git \
+            libfuse-dev \
+            libglib2.0-dev \
+            libseccomp-dev \
+            libtool \
+            pkg-config \
+            runc \
+            squashfs-tools \
+            squashfs-tools-ng \
+            uidmap \
+            wget \
             zlib1g-dev 
 
       - name: Install SingularityCE
