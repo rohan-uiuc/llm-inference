@@ -33,7 +33,8 @@ jobs:
       - name: Install SingularityCE
         run: |
           export VERSION=4.2.1
-          wget https://github.com/sylabs/singularity/releases/download/v${VERSION}/singularity-ce_${VERSION}-noble_amd64.deb
+          wget -O singularity-ce_amd64.deb \
+            https://github.com/sylabs/singularity/releases/download/v${VERSION}/singularity-ce_${VERSION}-noble_amd64.deb
           sudo dpkg -i singularity-ce_${VERSION}_amd64.deb
 
       - name: Build Singularity Image
