@@ -1,0 +1,62 @@
+name: Build and Release Singularity Image from Docker image
+
+on:
+  push:
+    branches: [ vllm-build ]
+  workflow_dispatch:
+
+jobs:
+  build-singularity-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Prerequisites
+        run: |
+          sudo apt-get update && sudo apt-get install -y \                                                                     
+            autoconf \                                                                                                                  
+            automake \                                                                                                                  
+            cryptsetup \                                                                                                                
+            fuse \                                                                                                                      
+            fuse2fs \                                                                                                                   
+            git \                                                                                                                       
+            libfuse-dev \                                                                                                               
+            libglib2.0-dev \                                                                                                            
+            libseccomp-dev \                                                                                                            
+            libtool \                                                                                                                   
+            pkg-config \                                                                                                                
+            runc \                                                                                                                      
+            squashfs-tools \                                                                                                            
+            squashfs-tools-ng \                                                                                                         
+            uidmap \                                                                                                                    
+            wget \                                                                                                                      
+            zlib1g-dev 
+
+      - name: Install SingularityCE
+        run: |
+          export VERSION=4.2.1
+          wget https://github.com/sylabs/singularity/releases/download/v${VERSION}/singularity-ce_${VERSION}_amd64.deb
+          sudo dpkg -i singularity-ce_${VERSION}_amd64.deb
+
+      - name: Build Singularity Image
+        run: |
+          singularity build vllm_latest.sif docker://vllm/vllm-openai:latest
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload SIF to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: vllm_latest.sif
+          asset_name: vllm_latest.sif
+          asset_content_type: application/octet-stream
