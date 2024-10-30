@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-singularity-image:
-    runs-on: ubuntu-latest
+    runs-on: debian-latest
     steps:
       - name: Install Prerequisites
         run: |
