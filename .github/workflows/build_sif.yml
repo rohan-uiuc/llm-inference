@@ -39,7 +39,7 @@ jobs:
 
       - name: Build Singularity Image
         run: |
-          singularity build vllm_latest.sif docker://vllm/vllm-openai:latest
+          singularity build --tmpdir ~/ vllm_latest.sif docker://vllm/vllm-openai:latest
 
       - name: Create GitHub Release
         id: create_release
