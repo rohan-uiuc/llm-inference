@@ -34,7 +34,7 @@ jobs:
         run: |
           export VERSION=4.2.1
           wget -O singularity-ce_amd64.deb \
-            https://github.com/sylabs/singularity/releases/download/v${VERSION}/singularity-ce_${VERSION}-noble_amd64.deb
+            https://github.com/sylabs/singularity/releases/download/v${VERSION}/singularity-ce_${VERSION}-focal_amd64.deb
           sudo dpkg -i singularity-ce_amd64.deb
 
       - name: Build Singularity Image
