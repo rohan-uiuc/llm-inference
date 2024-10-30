@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Install Prerequisites
         run: |
-          sudo apt-get update && sudo apt-get install \
+          apt-get update && apt-get install -y \
             autoconf \
             automake \
             cryptsetup \
@@ -33,7 +33,7 @@ jobs:
       - name: Install SingularityCE
         run: |
           export VERSION=4.2.1
-          wget https://github.com/sylabs/singularity/releases/download/v${VERSION}/singularity-ce_${VERSION}_amd64.deb
+          wget https://github.com/sylabs/singularity/releases/download/v${VERSION}/singularity-ce_${VERSION}-noble_amd64.deb
           sudo dpkg -i singularity-ce_${VERSION}_amd64.deb
 
       - name: Build Singularity Image
