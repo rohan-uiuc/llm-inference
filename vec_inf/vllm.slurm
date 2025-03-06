@@ -34,6 +34,20 @@ vllm_port_number=$(find_available_port $hostname 8080 65535)
 
 echo "Server address: http://${hostname}:${vllm_port_number}/v1"
 
+# Setup Cloudflare tunnel if enabled
+if [ "$ENABLE_CLOUDFLARE_TUNNEL" = "True" ]; then
+    # Get the SLURM job ID
+    job_id=${SLURM_JOB_ID}
+    
+    # Create Cloudflare tunnel
+    tunnel_url=$(bash ${SRC_DIR}/cloudflare_tunnel.sh create ${job_id} ${hostname} ${vllm_port_number})
+    
+    # Save only the last line (the actual URL) to a file for later reference
+    echo "${tunnel_url}" | tail -n 1 > "${LOG_DIR}/${JOB_NAME}.${job_id}.tunnel_url"
+    
+    echo "Cloudflare tunnel created. Service available at: ${tunnel_url}"
+fi
+
 if [ "$ENFORCE_EAGER" = "True" ]; then
     export ENFORCE_EAGER="--enforce-eager"
 else

@@ -33,6 +33,23 @@ head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
 # Find port for head node
 head_node_port=$(find_available_port $head_node_ip 8080 65535)
 
+# Write server url to file
+echo "Server address: http://${head_node_ip}:${head_node_port}/v1"
+
+# Setup Cloudflare tunnel if enabled
+if [ "$ENABLE_CLOUDFLARE_TUNNEL" = "True" ]; then
+    # Get the SLURM job ID
+    job_id=${SLURM_JOB_ID}
+    
+    # Create Cloudflare tunnel
+    tunnel_url=$(bash ${SRC_DIR}/cloudflare_tunnel.sh create ${job_id} ${head_node_ip} ${head_node_port})
+    
+    # Save only the last line (the actual URL) to a file for later reference
+    echo "${tunnel_url}" | tail -n 1 > "${LOG_DIR}/${JOB_NAME}.${job_id}.tunnel_url"
+    
+    echo "Cloudflare tunnel created. Service available at: ${tunnel_url}"
+fi
+
 # Starting the Ray head node
 ip_head=$head_node_ip:$head_node_port
 export ip_head
