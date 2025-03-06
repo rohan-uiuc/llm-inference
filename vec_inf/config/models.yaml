@@ -13,7 +13,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   c4ai-command-r-plus-08-2024:
@@ -30,7 +30,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   c4ai-command-r-08-2024:
@@ -47,7 +47,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   CodeLlama-7b-hf:
@@ -64,7 +64,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   CodeLlama-7b-Instruct-hf:
@@ -81,7 +81,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   CodeLlama-13b-hf:
@@ -98,7 +98,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   CodeLlama-13b-Instruct-hf:
@@ -115,7 +115,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   CodeLlama-34b-hf:
@@ -132,7 +132,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   CodeLlama-34b-Instruct-hf:
@@ -149,7 +149,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   CodeLlama-70b-hf:
@@ -166,7 +166,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   CodeLlama-70b-Instruct-hf:
@@ -183,7 +183,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   dbrx-instruct:
@@ -200,7 +200,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   gemma-2-9b:
@@ -217,7 +217,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   gemma-2-9b-it:
@@ -234,7 +234,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   gemma-2-27b:
@@ -251,7 +251,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   gemma-2-27b-it:
@@ -268,7 +268,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-2-7b-hf:
@@ -285,7 +285,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-2-7b-chat-hf:
@@ -302,7 +302,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-2-13b-hf:
@@ -319,7 +319,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-2-13b-chat-hf:
@@ -336,7 +336,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-2-70b-hf:
@@ -353,7 +353,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-2-70b-chat-hf:
@@ -370,7 +370,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   llava-1.5-7b-hf:
@@ -387,7 +387,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   llava-1.5-13b-hf:
@@ -404,7 +404,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   llava-v1.6-mistral-7b-hf:
@@ -421,7 +421,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   llava-v1.6-34b-hf:
@@ -438,7 +438,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Meta-Llama-3-8B:
@@ -455,7 +455,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Meta-Llama-3-8B-Instruct:
@@ -472,7 +472,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Meta-Llama-3-70B:
@@ -489,7 +489,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Meta-Llama-3-70B-Instruct:
@@ -506,7 +506,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Meta-Llama-3.1-8B:
@@ -523,7 +523,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Meta-Llama-3.1-8B-Instruct:
@@ -540,9 +540,9 @@ models:
     time: 08:00:00
     partition: a100
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
-    model_weights_parent_dir: /projects/bbwb/avd6/model-weights
+    model_weights_parent_dir: /model-weights
   Meta-Llama-3.1-70B:
     model_family: Meta-Llama-3.1
     model_variant: 70B
@@ -557,7 +557,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Meta-Llama-3.1-70B-Instruct:
@@ -574,7 +574,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Meta-Llama-3.1-405B-Instruct:
@@ -591,7 +591,7 @@ models:
     time: 02:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Mistral-7B-v0.1:
@@ -608,7 +608,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Mistral-7B-Instruct-v0.1:
@@ -625,7 +625,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Mistral-7B-Instruct-v0.2:
@@ -642,7 +642,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Mistral-7B-v0.3:
@@ -659,7 +659,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Mistral-7B-Instruct-v0.3:
@@ -676,7 +676,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Mistral-Large-Instruct-2407:
@@ -693,7 +693,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Mistral-Large-Instruct-2411:
@@ -710,7 +710,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Mixtral-8x7B-Instruct-v0.1:
@@ -727,7 +727,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Mixtral-8x22B-v0.1:
@@ -744,7 +744,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Mixtral-8x22B-Instruct-v0.1:
@@ -761,7 +761,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Phi-3-medium-128k-instruct:
@@ -778,7 +778,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Phi-3-vision-128k-instruct:
@@ -795,7 +795,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama3-OpenBioLLM-70B:
@@ -812,7 +812,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-3.1-Nemotron-70B-Instruct-HF:
@@ -829,7 +829,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-3.2-1B:
@@ -846,7 +846,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-3.2-1B-Instruct:
@@ -863,7 +863,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-3.2-3B:
@@ -880,7 +880,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-3.2-3B-Instruct:
@@ -897,7 +897,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-3.2-11B-Vision:
@@ -914,7 +914,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-3.2-11B-Vision-Instruct:
@@ -931,7 +931,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-3.2-90B-Vision:
@@ -948,7 +948,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-3.2-90B-Vision-Instruct:
@@ -965,7 +965,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Qwen2.5-0.5B-Instruct:
@@ -982,7 +982,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Qwen2.5-1.5B-Instruct:
@@ -999,7 +999,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Qwen2.5-3B-Instruct:
@@ -1016,7 +1016,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Qwen2.5-7B-Instruct:
@@ -1031,11 +1031,12 @@ models:
     pipeline_parallelism: true
     enforce_eager: false
     time: 08:00:00
-    partition: a40
+    partition: a100
     data_type: auto
-    venv: singularity
-    log_dir: default
-    model_weights_parent_dir: /model-weights
+    venv: apptainer
+    log_dir: /projects/bbwb/rohan13/llm-inference/logs
+    model_weights_parent_dir: /projects/bbwb/rohan13/llm-inference/model-weights
+    huggingface_id: Qwen/Qwen2.5-7B-Instruct
   Qwen2.5-14B-Instruct:
     model_family: Qwen2.5
     model_variant: 14B-Instruct
@@ -1050,7 +1051,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Qwen2.5-32B-Instruct:
@@ -1067,7 +1068,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Qwen2.5-72B-Instruct:
@@ -1084,7 +1085,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Qwen2.5-Math-1.5B-Instruct:
@@ -1101,7 +1102,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Qwen2.5-Math-7B-Instruct:
@@ -1118,7 +1119,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Qwen2.5-Math-72B-Instruct:
@@ -1135,7 +1136,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Qwen2.5-Coder-7B-Instruct:
@@ -1152,7 +1153,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Qwen2.5-Math-RM-72B:
@@ -1169,7 +1170,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   QwQ-32B-Preview:
@@ -1186,7 +1187,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Pixtral-12B-2409:
@@ -1203,7 +1204,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   e5-mistral-7b-instruct:
@@ -1220,7 +1221,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   bge-base-en-v1.5:
@@ -1237,7 +1238,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   all-MiniLM-L6-v2:
@@ -1254,7 +1255,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Llama-3.3-70B-Instruct:
@@ -1271,7 +1272,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   InternVL2_5-26B:
@@ -1288,7 +1289,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   InternVL2_5-38B:
@@ -1305,7 +1306,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   Aya-Expanse-32B:
@@ -1322,7 +1323,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   DeepSeek-R1-Distill-Llama-70B:
@@ -1339,7 +1340,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   DeepSeek-R1-Distill-Llama-8B:
@@ -1356,7 +1357,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   DeepSeek-R1-Distill-Qwen-32B:
@@ -1373,7 +1374,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   DeepSeek-R1-Distill-Qwen-14B:
@@ -1390,7 +1391,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   DeepSeek-R1-Distill-Qwen-7B:
@@ -1407,7 +1408,7 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights
   DeepSeek-R1-Distill-Qwen-1.5B:
@@ -1424,6 +1425,6 @@ models:
     time: 08:00:00
     partition: a40
     data_type: auto
-    venv: singularity
+    venv: apptainer
     log_dir: default
     model_weights_parent_dir: /model-weights

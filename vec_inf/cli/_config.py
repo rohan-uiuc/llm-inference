@@ -1,12 +1,13 @@
 """Model configuration."""
 
 from typing import Optional, Union
+import os
 
 from pydantic import BaseModel, ConfigDict, Field
 from typing_extensions import Literal
 
 
-PARTITION = Literal["a40", "a100", "t4v1", "t4v2", "rtx6000"]
+PARTITION = Literal["a40", "a100", "t4v1", "t4v2", "rtx6000", "a100"]
 
 DATA_TYPE = Literal["auto", "float16", "bfloat16", "float32"]
 
@@ -46,13 +47,15 @@ class ModelConfig(BaseModel):
     data_type: Union[DATA_TYPE, str] = Field(
         default="auto", description="Model data type"
     )
-    venv: str = Field(default="singularity", description="Virtual environment path")
+    venv: str = Field(default="apptainer", description="Virtual environment path")
     log_dir: str = Field(default="default", description="Slurm log directory path")
     model_weights_parent_dir: str = Field(
-        default="/model-weights",
-        description="Parent directory containing model weights",
+        default_factory=lambda: os.path.join(os.getcwd(), "model-weights"),
+        description="Parent directory containing model weights (relative to current working directory)",
     )
-
+    huggingface_id: str = Field(
+        default="", description="HuggingFace ID for the model"
+    )
     model_config = ConfigDict(
         extra="forbid", str_strip_whitespace=True, validate_default=True, frozen=True
     )

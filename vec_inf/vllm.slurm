@@ -2,15 +2,29 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 
-# Load CUDA, change to the cuda version on your environment if different
-# source /opt/lmod/lmod/init/profile
+# Load CUDA modules in correct order
 module purge
 module load gcc/11.3.0
 module load cuda/11.7.0
 module load cudnn/8.4.0.27-11.6
 #module load anaconda3_gpu/4.13.0
 # module load cuda-12.2.1
+
+# Set CUDA device visibility
+export CUDA_VISIBLE_DEVICES=0  # For single GPU
+if [ "$NUM_GPUS" -gt 1 ]; then
+    DEVICES=$(seq -s, 0 $((NUM_GPUS-1)))
+    export CUDA_VISIBLE_DEVICES=$DEVICES
+fi
+
+# Verify CUDA setup
 nvidia-smi
+
+# Set HuggingFace cache directory to use the model weights directory
+export HF_HOME="${MODEL_WEIGHTS_PARENT_DIR}/.cache/huggingface"
+export TRANSFORMERS_CACHE="${MODEL_WEIGHTS_PARENT_DIR}/.cache/huggingface/transformers"
+mkdir -p "${HF_HOME}"
+mkdir -p "${TRANSFORMERS_CACHE}"
 
 source ${SRC_DIR}/find_port.sh
 
@@ -26,17 +40,28 @@ else
     export ENFORCE_EAGER=""
 fi
 
+# Set model path - use HuggingFace ID if provided, otherwise use local path
+if [ -n "$HUGGINGFACE_ID" ]; then
+    export MODEL_PATH="$HUGGINGFACE_ID"
+else
+    export MODEL_PATH="$VLLM_MODEL_WEIGHTS"
+fi
+
 echo "VENV_BASE: $VENV_BASE"
+echo "Using model path: $MODEL_PATH"
 
 # Activate vllm venv
 if [ "$VENV_BASE" = "singularity" ]; then
-    export SINGULARITY_IMAGE=/projects/bbwb/avd6/vector-inference/vector-inference-3.sif
+    export SINGULARITY_IMAGE=/projects/bbwb/rohan13/llm-inference/vector-inference.sif
     export VLLM_NCCL_SO_PATH=/vec-inf/nccl/libnccl.so.2.18.1
     module load singularity-ce/3.8.2
     singularity exec $SINGULARITY_IMAGE ray stop
-    singularity exec --nv --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} $SINGULARITY_IMAGE \
+    singularity exec --nv \
+    --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+    --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES \
+    $SINGULARITY_IMAGE \
     python3.10 -m vllm.entrypoints.openai.api_server \
-    --model ${VLLM_MODEL_WEIGHTS} \
+    --model ${MODEL_PATH} \
     --served-model-name ${JOB_NAME} \
     --host "0.0.0.0" \
     --port ${vllm_port_number} \
@@ -49,12 +74,15 @@ if [ "$VENV_BASE" = "singularity" ]; then
     --task ${VLLM_TASK} \
     ${ENFORCE_EAGER}
 elif [ "$VENV_BASE" = "apptainer" ]; then
-    export SINGULARITY_IMAGE=/projects/bbwb/avd6/vector-inference/vector-inference-3.sif
+    export SINGULARITY_IMAGE=/projects/bbwb/rohan13/llm-inference/vector-inference.sif
     export VLLM_NCCL_SO_PATH=/vec-inf/nccl/libnccl.so.2.18.1
     #apptainer exec $SINGULARITY_IMAGE ray stop
-    apptainer exec --nv --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} $SINGULARITY_IMAGE \
+    apptainer exec --nv \
+    --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+    --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES \
+    $SINGULARITY_IMAGE \
     python3.10 -m vllm.entrypoints.openai.api_server \
-    --model ${VLLM_MODEL_WEIGHTS} \
+    --model ${MODEL_PATH} \
     --served-model-name ${JOB_NAME} \
     --host "0.0.0.0" \
     --port ${vllm_port_number} \
@@ -69,7 +97,7 @@ elif [ "$VENV_BASE" = "apptainer" ]; then
 else
     source ${VENV_BASE}/bin/activate
     python3 -m vllm.entrypoints.openai.api_server \
-    --model ${VLLM_MODEL_WEIGHTS} \
+    --model ${MODEL_PATH} \
     --served-model-name ${JOB_NAME} \
     --host "0.0.0.0" \
     --port ${vllm_port_number} \

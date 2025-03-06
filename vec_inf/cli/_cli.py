@@ -93,6 +93,11 @@ def cli() -> None:
     help="Always use eager-mode PyTorch, accepts 'True' or 'False', default to 'False' for custom models if not set",
 )
 @click.option(
+    "--account",
+    type=str,
+    help="Account to use for job",
+)
+@click.option(
     "--json-mode",
     is_flag=True,
     help="Output in JSON string",

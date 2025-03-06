@@ -124,7 +124,7 @@ class StatusHelper:
     def __init__(self, slurm_job_id: int, output: str, log_dir: Optional[str] = None):
         self.slurm_job_id = slurm_job_id
         self.output = output
-        self.log_dir = log_dir
+        self.log_dir = log_dir if log_dir else os.path.join(os.getcwd(), "logs")
         self.status_info = self.get_base_status_data()
 
     def get_base_status_data(self) -> dict[str, Union[str, None]]:

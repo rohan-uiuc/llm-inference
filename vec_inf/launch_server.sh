@@ -20,12 +20,14 @@ while [[ "$#" -gt 0 ]]; do
         --model-weights-parent-dir) model_weights_parent_dir="$2"; shift ;;
         --pipeline-parallelism) pipeline_parallelism="$2"; shift ;;
         --enforce-eager) enforce_eager="$2"; shift ;;
+        --huggingface-id) huggingface_id="$2"; shift ;;
+        --account) account="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
 done
 
-required_vars=(model_family model_variant model_type partition walltime num_nodes num_gpus max_model_len vocab_size data_type venv log_dir model_weights_parent_dir)
+required_vars=(model_family model_variant model_type partition walltime num_nodes num_gpus max_model_len vocab_size data_type venv log_dir model_weights_parent_dir account)
 
 for var in "$required_vars[@]"; do
     if [ -z "$!var" ]; then
@@ -47,7 +49,8 @@ export VLLM_DATA_TYPE=$data_type
 export VENV_BASE=$venv
 export LOG_DIR=$log_dir
 export MODEL_WEIGHTS_PARENT_DIR=$model_weights_parent_dir
-
+export HUGGINGFACE_ID=$huggingface_id
+export ACCOUNT=$account
 if [[ "$model_type" == "LLM" || "$model_type" == "VLM" ]]; then
     export VLLM_TASK="generate"
 elif [ "$model_type" == "Reward_Modeling" ]; then
@@ -85,7 +88,7 @@ if [ "$JOB_NAME" == "DeepSeek-R1-None" ]; then
 fi
 
 if [ "$LOG_DIR" = "default" ]; then
-    export LOG_DIR="$HOME/.vec-inf-logs/$MODEL_FAMILY"
+    export LOG_DIR="$(pwd)/logs/$MODEL_FAMILY"
 fi
 mkdir -p $LOG_DIR
 
@@ -126,7 +129,8 @@ echo Pipeline Parallelism: $PIPELINE_PARALLELISM
 echo Enforce Eager: $ENFORCE_EAGER
 echo Log Directory: $LOG_DIR
 echo Model Weights Parent Directory: $MODEL_WEIGHTS_PARENT_DIR
-
+echo HuggingFace ID: $HUGGINGFACE_ID
+echo Account: $ACCOUNT
 is_special=""
 if [ "$NUM_NODES" -gt 1 ]; then
     is_special="multinode_"
@@ -134,6 +138,7 @@ fi
 
 sbatch --job-name $JOB_NAME \
     --partition $JOB_PARTITION \
+    --account $ACCOUNT \
     --nodes $NUM_NODES \
     --gres gpu:$NUM_GPUS \
     --time $WALLTIME \
