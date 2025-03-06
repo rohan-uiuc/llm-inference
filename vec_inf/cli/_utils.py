@@ -14,7 +14,7 @@ from vec_inf.cli._config import ModelConfig
 
 MODEL_READY_SIGNATURE = "INFO:     Application startup complete."
 SERVER_ADDRESS_SIGNATURE = "Server address: "
-CACHED_CONFIG = os.path.join("/", "model-weights", "vec-inf-config.yaml")
+CACHED_CONFIG = os.path.join(os.getcwd(), "model-weights", "vec-inf-config.yaml")
 
 
 def run_bash_command(command: str) -> str:
@@ -22,7 +22,9 @@ def run_bash_command(command: str) -> str:
     process = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
-    stdout, _ = process.communicate()
+    stdout, stderr = process.communicate()
+    print(f"STDOUT: {stdout}")
+    print(f"STDERR: {stderr}")
     return stdout
 
 
@@ -144,6 +146,11 @@ def load_config() -> list[ModelConfig]:
             print(
                 f"WARNING: Could not find user config: {user_path}, revert to default config located at {default_path}"
             )
+
+    # Add this before creating ModelConfig instances in load_config
+    for model_data in config.get("models", {}).values():
+        if model_data.get("model_weights_parent_dir") == "/model-weights":
+            model_data["model_weights_parent_dir"] = os.path.join(os.getcwd(), "model-weights")
 
     return [
         ModelConfig(model_name=name, **model_data)
