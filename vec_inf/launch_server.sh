@@ -22,6 +22,7 @@ while [[ "$#" -gt 0 ]]; do
         --enforce-eager) enforce_eager="$2"; shift ;;
         --huggingface-id) huggingface_id="$2"; shift ;;
         --account) account="$2"; shift ;;
+        --enable-cloudflare-tunnel) enable_cloudflare_tunnel=True ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
@@ -78,6 +79,12 @@ if [ -n "$enforce_eager" ]; then
     export ENFORCE_EAGER=$enforce_eager
 else
     export ENFORCE_EAGER="False"
+fi
+
+if [ -n "$enable_cloudflare_tunnel" ]; then
+    export ENABLE_CLOUDFLARE_TUNNEL="True"
+else
+    export ENABLE_CLOUDFLARE_TUNNEL="False"
 fi
 
 # ================================= Set default environment variables ======================================
