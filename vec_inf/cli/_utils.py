@@ -23,8 +23,8 @@ def run_bash_command(command: str) -> str:
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
     stdout, stderr = process.communicate()
-    print(f"STDOUT: {stdout}")
-    print(f"STDERR: {stderr}")
+    # print(f"STDOUT: {stdout}")
+    # print(f"STDERR: {stderr}")
     return stdout
 
 
