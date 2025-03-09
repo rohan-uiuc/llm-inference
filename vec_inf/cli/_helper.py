@@ -7,6 +7,7 @@ from typing import Any, Optional, Union, cast
 import click
 from rich.console import Console
 from rich.table import Table
+import glob
 
 import vec_inf.cli._utils as utils
 from vec_inf.cli._config import ModelConfig
@@ -47,6 +48,10 @@ class LaunchHelper:
         for bool_field in ["pipeline_parallelism", "enforce_eager"]:
             if (value := self.cli_kwargs.get(bool_field)) is not None:
                 params[bool_field] = self.convert_boolean_value(value)
+        
+        # Handle flag options
+        if self.cli_kwargs.get("enable_cloudflare_tunnel"):
+            params["enable_cloudflare_tunnel"] = "True"
 
         # Merge other overrides
         for key, value in self.cli_kwargs.items():
@@ -54,6 +59,7 @@ class LaunchHelper:
                 "json_mode",
                 "pipeline_parallelism",
                 "enforce_eager",
+                "enable_cloudflare_tunnel",
             ]:
                 params[key] = value
         return params
@@ -66,6 +72,7 @@ class LaunchHelper:
 
     def build_launch_command(self, base_command: str, params: dict[str, Any]) -> str:
         """Construct the full launch command with parameters."""
+        # print(f"Building launch command with params: {params}")
         command = base_command
         for param_name, param_value in params.items():
             if param_value is None:
@@ -76,6 +83,12 @@ class LaunchHelper:
                 formatted_value = "True" if formatted_value else "False"
 
             arg_name = param_name.replace("_", "-")
+            
+            # Handle flag options
+            if param_name == "enable_cloudflare_tunnel" and param_value == "True":
+                command += f" --{arg_name}"
+                continue
+                
             command += f" --{arg_name} {formatted_value}"
 
         return command
@@ -108,6 +121,8 @@ class LaunchHelper:
         """Process and display launch output."""
         json_mode = bool(self.cli_kwargs.get("json_mode", False))
         slurm_job_id, output_lines = self.parse_launch_output(output)
+        # console.print(f"SLURM Job ID: {slurm_job_id}")
+        # console.print(f"Output lines: {output_lines}")
 
         if json_mode:
             output_data = self.format_json_output(slurm_job_id, output_lines)
@@ -121,12 +136,13 @@ class StatusHelper:
     def __init__(self, slurm_job_id: int, output: str, log_dir: Optional[str] = None):
         self.slurm_job_id = slurm_job_id
         self.output = output
-        self.log_dir = log_dir
+        self.log_dir = log_dir if log_dir else os.path.join(os.getcwd(), "logs")
         self.status_info = self.get_base_status_data()
 
     def get_base_status_data(self) -> dict[str, Union[str, None]]:
         """Extract basic job status information from scontrol output."""
         try:
+            # print(f"get_base_status_data Output: {self.output}")
             job_name = self.output.split(" ")[1].split("=")[1]
             job_state = self.output.split(" ")[9].split("=")[1]
         except IndexError:
@@ -137,86 +153,112 @@ class StatusHelper:
             "model_name": job_name,
             "status": "UNAVAILABLE",
             "base_url": "UNAVAILABLE",
+            "cloudflare_url": "UNAVAILABLE",
             "state": job_state,
             "pending_reason": None,
             "failed_reason": None,
         }
 
     def process_job_state(self) -> None:
-        """Process different job states and update status information."""
-        if self.status_info["state"] == "PENDING":
-            self.process_pending_state()
-        elif self.status_info["state"] == "RUNNING":
+        """Process job state and update status information."""
+        if self.status_info["state"] == "RUNNING":
             self.process_running_state()
+        elif self.status_info["state"] == "PENDING":
+            self.process_pending_state()
+        elif self.status_info["state"] in ["CANCELLED", "COMPLETED", "FAILED", "TIMEOUT"]:
+            self.status_info["status"] = "SHUTDOWN"
+        else:
+            self.status_info["status"] = "UNAVAILABLE"
 
     def check_model_health(self) -> None:
-        """Check model health and update status accordingly."""
-        status, status_code = utils.model_health_check(
-            cast(str, self.status_info["model_name"]), self.slurm_job_id, self.log_dir
-        )
-        if status == "READY":
-            self.status_info["base_url"] = utils.get_base_url(
-                cast(str, self.status_info["model_name"]),
-                self.slurm_job_id,
-                self.log_dir,
-            )
-            self.status_info["status"] = status
-        else:
-            self.status_info["status"], self.status_info["failed_reason"] = (
-                status,
-                cast(str, status_code),
-            )
+        """Check if the model is healthy by reading the log file."""
+        try:
+            log_file = glob.glob(
+                f"{self.log_dir}/{self.status_info['model_name']}.{self.slurm_job_id}.out"
+            )[0]
+            with open(log_file, "r") as f:
+                log_content = f.read()
+
+            if "Server address:" in log_content:
+                self.status_info["status"] = "READY"
+                server_url_line = [
+                    line for line in log_content.split("\n") if "Server address:" in line
+                ][0]
+                self.status_info["base_url"] = server_url_line.split("Server address: ")[
+                    1
+                ]
+                
+                # Check for Cloudflare tunnel URL
+                tunnel_url_file = f"{self.log_dir}/{self.status_info['model_name']}.{self.slurm_job_id}.tunnel_url"
+                if os.path.exists(tunnel_url_file):
+                    with open(tunnel_url_file, "r") as f:
+                        # Read all lines and get the last non-empty line which should be just the URL
+                        lines = [line.strip() for line in f.readlines() if line.strip()]
+                        if lines:
+                            self.status_info["cloudflare_url"] = lines[-1]
+            else:
+                self.status_info["status"] = "LAUNCHING"
+        except (IndexError, FileNotFoundError):
+            self.status_info["status"] = "LAUNCHING"
 
     def process_running_state(self) -> None:
-        """Process RUNNING job state and check server status."""
-        server_status = utils.is_server_running(
-            cast(str, self.status_info["model_name"]), self.slurm_job_id, self.log_dir
-        )
-
-        if isinstance(server_status, tuple):
-            self.status_info["status"], self.status_info["failed_reason"] = (
-                server_status
-            )
-            return
-
-        if server_status == "RUNNING":
-            self.check_model_health()
-        else:
-            self.status_info["status"] = server_status
+        """Process running state and check model health."""
+        self.check_model_health()
+        if self.status_info["status"] == "LAUNCHING":
+            # Check if the job has been running for too long without becoming ready
+            try:
+                log_file = glob.glob(
+                    f"{self.log_dir}/{self.status_info['model_name']}.{self.slurm_job_id}.err"
+                )[0]
+                with open(log_file, "r") as f:
+                    err_content = f.read()
+                if "error" in err_content.lower() or "exception" in err_content.lower():
+                    self.status_info["status"] = "FAILED"
+                    self.status_info["failed_reason"] = "Error in model initialization"
+            except (IndexError, FileNotFoundError):
+                pass
 
     def process_pending_state(self) -> None:
-        """Process PENDING job state."""
+        """Process pending state and extract pending reason."""
+        self.status_info["status"] = "PENDING"
         try:
-            self.status_info["pending_reason"] = self.output.split(" ")[10].split("=")[
-                1
-            ]
-            self.status_info["status"] = "PENDING"
-        except IndexError:
-            self.status_info["pending_reason"] = "Unknown pending reason"
+            reason_index = self.output.find("Reason=")
+            if reason_index != -1:
+                reason_str = self.output[reason_index:]
+                end_index = reason_str.find(" ")
+                if end_index != -1:
+                    self.status_info["pending_reason"] = reason_str[
+                        len("Reason=") : end_index
+                    ]
+        except Exception:
+            pass
 
     def output_json(self) -> None:
-        """Format and output JSON data."""
-        json_data = {
+        """Output status information as JSON."""
+        output_data = {
+            "slurm_job_id": self.slurm_job_id,
             "model_name": self.status_info["model_name"],
-            "model_status": self.status_info["status"],
+            "status": self.status_info["status"],
             "base_url": self.status_info["base_url"],
+            "cloudflare_url": self.status_info["cloudflare_url"],
         }
         if self.status_info["pending_reason"]:
-            json_data["pending_reason"] = self.status_info["pending_reason"]
+            output_data["pending_reason"] = self.status_info["pending_reason"]
         if self.status_info["failed_reason"]:
-            json_data["failed_reason"] = self.status_info["failed_reason"]
-        click.echo(json_data)
+            output_data["failed_reason"] = self.status_info["failed_reason"]
+        click.echo(json.dumps(output_data))
 
     def output_table(self, console: Console) -> None:
-        """Create and display rich table."""
-        table = utils.create_table(key_title="Job Status", value_title="Value")
+        """Output status information as a table."""
+        table = Table(title=f"Model Status (Job ID: {self.slurm_job_id})")
+        table.add_column("Property", style="cyan")
+        table.add_column("Value", style="green")
         table.add_row("Model Name", self.status_info["model_name"])
-        table.add_row("Model Status", self.status_info["status"], style="blue")
-
+        table.add_row("Status", self.status_info["status"])
+        table.add_row("Base URL", self.status_info["base_url"])
+        table.add_row("Cloudflare URL", self.status_info["cloudflare_url"])
         if self.status_info["pending_reason"]:
             table.add_row("Pending Reason", self.status_info["pending_reason"])
         if self.status_info["failed_reason"]:
             table.add_row("Failed Reason", self.status_info["failed_reason"])
-
-        table.add_row("Base URL", self.status_info["base_url"])
         console.print(table)

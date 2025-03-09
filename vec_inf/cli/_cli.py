@@ -1,6 +1,8 @@
 """Command line interface for Vector Inference."""
 
 import time
+import os
+import glob
 from typing import Optional, Union
 
 import click
@@ -93,6 +95,16 @@ def cli() -> None:
     help="Always use eager-mode PyTorch, accepts 'True' or 'False', default to 'False' for custom models if not set",
 )
 @click.option(
+    "--account",
+    type=str,
+    help="Account to use for job",
+)
+@click.option(
+    "--enable-cloudflare-tunnel",
+    is_flag=True,
+    help="Enable Cloudflare tunnel for public access",
+)
+@click.option(
     "--json-mode",
     is_flag=True,
     help="Output in JSON string",
@@ -108,7 +120,9 @@ def launch(
         base_command = launch_helper.get_base_launch_command()
         params = launch_helper.process_configuration()
         launch_command = launch_helper.build_launch_command(base_command, params)
+        # print(f"Launch command: {launch_command}")
         command_output = utils.run_bash_command(launch_command)
+        # print(f"Command output: {command_output}")
         launch_helper.handle_launch_output(command_output, CONSOLE)
 
     except click.ClickException as e:
@@ -147,11 +161,33 @@ def status(
 
 @cli.command("shutdown")
 @click.argument("slurm_job_id", type=int, nargs=1)
-def shutdown(slurm_job_id: int) -> None:
-    """Shutdown a running model on the cluster."""
-    shutdown_cmd = f"scancel {slurm_job_id}"
-    utils.run_bash_command(shutdown_cmd)
+@click.option(
+    "--log-dir",
+    type=str,
+    help="Path to slurm log directory. This is required if --log-dir was set in model launch",
+)
+def shutdown(slurm_job_id: int, log_dir: Optional[str] = None) -> None:
+    """Shutdown a running model."""
     click.echo(f"Shutting down model with Slurm Job ID: {slurm_job_id}")
+    
+    # Get the log directory
+    if log_dir is None:
+        log_dir = os.path.join(os.getcwd(), "logs")
+    
+    # Clean up Cloudflare tunnel if it exists
+    src_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    cloudflare_script = os.path.join(src_dir, "cloudflare_tunnel.sh")
+    
+    if os.path.exists(cloudflare_script):
+        # Check if there's a tunnel for this job
+        tunnel_files = glob.glob(f"{log_dir}/*.{slurm_job_id}.tunnel_url")
+        if tunnel_files:
+            click.echo("Cleaning up Cloudflare tunnel...")
+            os.system(f"bash {cloudflare_script} delete {slurm_job_id}")
+    
+    # Cancel the Slurm job
+    os.system(f"scancel {slurm_job_id}")
+    click.echo("Model shutdown complete.")
 
 
 @cli.command("list")

@@ -5,14 +5,19 @@
 #SBATCH --tasks-per-node=1
 
 # Load CUDA, change to the cuda version on your environment if different
-source /opt/lmod/lmod/init/profile
-module load cuda-12.3
+# source /opt/lmod/lmod/init/profile
+module purge
+module load gcc/11.3.0
+module load cuda/11.7.0
+module load cudnn/8.4.0.27-11.6
+#module load anaconda3_gpu/4.13.0
+# module load cuda-12.2.1
 nvidia-smi
 
 source ${SRC_DIR}/find_port.sh
 
 if [ "$VENV_BASE" = "singularity" ]; then
-    export SINGULARITY_IMAGE=/projects/aieng/public/vector-inference_latest.sif
+    export SINGULARITY_IMAGE=/projects/bbwb/rohan13/llm-inference/vector-inference.sif
     export VLLM_NCCL_SO_PATH=/vec-inf/nccl/libnccl.so.2.18.1
     module load singularity-ce/3.8.2
     singularity exec $SINGULARITY_IMAGE ray stop
@@ -27,6 +32,23 @@ head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
 
 # Find port for head node
 head_node_port=$(find_available_port $head_node_ip 8080 65535)
+
+# Write server url to file
+echo "Server address: http://${head_node_ip}:${head_node_port}/v1"
+
+# Setup Cloudflare tunnel if enabled
+if [ "$ENABLE_CLOUDFLARE_TUNNEL" = "True" ]; then
+    # Get the SLURM job ID
+    job_id=${SLURM_JOB_ID}
+    
+    # Create Cloudflare tunnel
+    tunnel_url=$(bash ${SRC_DIR}/cloudflare_tunnel.sh create ${job_id} ${head_node_ip} ${head_node_port})
+    
+    # Save only the last line (the actual URL) to a file for later reference
+    echo "${tunnel_url}" | tail -n 1 > "${LOG_DIR}/${JOB_NAME}.${job_id}.tunnel_url"
+    
+    echo "Cloudflare tunnel created. Service available at: ${tunnel_url}"
+fi
 
 # Starting the Ray head node
 ip_head=$head_node_ip:$head_node_port
