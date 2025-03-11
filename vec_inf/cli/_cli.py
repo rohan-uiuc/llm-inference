@@ -197,7 +197,12 @@ def shutdown(slurm_job_id: int, log_dir: Optional[str] = None) -> None:
     is_flag=True,
     help="Output in JSON string",
 )
-def list_models(model_name: Optional[str] = None, json_mode: bool = False) -> None:
+@click.option(
+    "--detailed",
+    is_flag=True,
+    help="Show detailed configuration for all models",
+)
+def list_models(model_name: Optional[str] = None, json_mode: bool = False, detailed: bool = False) -> None:
     """List all available models, or get default setup of a specific model."""
     model_configs = utils.load_config()
 
@@ -221,6 +226,26 @@ def list_models(model_name: Optional[str] = None, json_mode: bool = False) -> No
             CONSOLE.print(table)
 
     def list_all_models() -> None:
+        if detailed:
+            if json_mode:
+                # Return detailed JSON for all models
+                excluded = {"venv", "log_dir"}
+                output = [config.model_dump(exclude=excluded) for config in model_configs]
+                click.echo(output)
+                return
+            
+            # Display detailed tables for all models
+            for i, config in enumerate(model_configs):
+                if i > 0:
+                    click.echo("\n")  # Add spacing between models
+                click.echo(f"Model: {config.model_name}")
+                table = utils.create_table(key_title="Model Config", value_title="Value")
+                for field, value in config.model_dump().items():
+                    if field not in {"venv", "log_dir"}:
+                        table.add_row(field, str(value))
+                CONSOLE.print(table)
+            return
+            
         if json_mode:
             click.echo([config.model_name for config in model_configs])
             return
