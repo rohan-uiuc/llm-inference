@@ -10,6 +10,11 @@ module load cudnn/8.4.0.27-11.6
 #module load anaconda3_gpu/4.13.0
 # module load cuda-12.2.1
 
+# Export GCC paths to help compiler find it in containers
+export GCC_PATH=/sw/spack/hydrogpu-2022-06/apps/gcc/11.3.0-gcc-8.4.1-kroofxa
+export PATH=$GCC_PATH/bin:$PATH
+export LD_LIBRARY_PATH=$GCC_PATH/lib64:$LD_LIBRARY_PATH
+
 # Set CUDA device visibility
 export CUDA_VISIBLE_DEVICES=0  # For single GPU
 if [ "$NUM_GPUS" -gt 1 ]; then
@@ -69,10 +74,26 @@ if [ "$VENV_BASE" = "singularity" ]; then
     export SINGULARITY_IMAGE=/projects/bbwb/rohan13/llm-inference/vector-inference.sif
     export VLLM_NCCL_SO_PATH=/vec-inf/nccl/libnccl.so.2.18.1
     module load singularity-ce/3.8.2
-    singularity exec $SINGULARITY_IMAGE ray stop
+    
+    # Setup container environment
     singularity exec --nv \
     --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+    --bind ${GCC_PATH}:${GCC_PATH} \
+    --bind ${SRC_DIR}:${SRC_DIR} \
+    $SINGULARITY_IMAGE \
+    bash ${SRC_DIR}/container_setup.sh
+    
+    # Stop any existing Ray processes
+    singularity exec $SINGULARITY_IMAGE ray stop
+    
+    # Run the main vLLM server
+    singularity exec --nv \
+    --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+    --bind ${GCC_PATH}:${GCC_PATH} \
+    --bind ${SRC_DIR}:${SRC_DIR} \
     --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES \
+    --env PATH=$PATH \
+    --env LD_LIBRARY_PATH=$LD_LIBRARY_PATH \
     $SINGULARITY_IMAGE \
     python3.10 -m vllm.entrypoints.openai.api_server \
     --model ${MODEL_PATH} \
@@ -90,10 +111,23 @@ if [ "$VENV_BASE" = "singularity" ]; then
 elif [ "$VENV_BASE" = "apptainer" ]; then
     export SINGULARITY_IMAGE=/projects/bbwb/rohan13/llm-inference/vector-inference.sif
     export VLLM_NCCL_SO_PATH=/vec-inf/nccl/libnccl.so.2.18.1
-    #apptainer exec $SINGULARITY_IMAGE ray stop
+    
+    # Setup container environment
     apptainer exec --nv \
     --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+    --bind ${GCC_PATH}:${GCC_PATH} \
+    --bind ${SRC_DIR}:${SRC_DIR} \
+    $SINGULARITY_IMAGE \
+    bash ${SRC_DIR}/container_setup.sh
+    
+    # Run the main vLLM server
+    apptainer exec --nv \
+    --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+    --bind ${GCC_PATH}:${GCC_PATH} \
+    --bind ${SRC_DIR}:${SRC_DIR} \
     --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES \
+    --env PATH=$PATH \
+    --env LD_LIBRARY_PATH=$LD_LIBRARY_PATH \
     $SINGULARITY_IMAGE \
     python3.10 -m vllm.entrypoints.openai.api_server \
     --model ${MODEL_PATH} \

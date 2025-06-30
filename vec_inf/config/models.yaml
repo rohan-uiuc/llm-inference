@@ -471,7 +471,7 @@ models:
     model_family: Meta-Llama-3
     model_variant: 8B
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 128256
     max_model_len: 8192
@@ -489,7 +489,7 @@ models:
     model_family: Meta-Llama-3
     model_variant: 8B-Instruct
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 128256
     max_model_len: 8192
@@ -543,7 +543,7 @@ models:
     model_family: Meta-Llama-3.1
     model_variant: 8B
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 128256
     max_model_len: 131072
@@ -561,7 +561,7 @@ models:
     model_family: Meta-Llama-3.1
     model_variant: 8B-Instruct
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 128256
     max_model_len: 131072
@@ -813,7 +813,7 @@ models:
     model_family: Phi-3
     model_variant: medium-128k-instruct
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 32064
     max_model_len: 131072
@@ -885,7 +885,7 @@ models:
     model_family: Llama-3.2
     model_variant: 1B
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 128256
     max_model_len: 131072
@@ -903,7 +903,7 @@ models:
     model_family: Llama-3.2
     model_variant: 1B-Instruct
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 128256
     max_model_len: 131072
@@ -921,7 +921,7 @@ models:
     model_family: Llama-3.2
     model_variant: 3B
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 128256
     max_model_len: 131072
@@ -939,7 +939,7 @@ models:
     model_family: Llama-3.2
     model_variant: 3B-Instruct
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 128256
     max_model_len: 131072
@@ -1294,7 +1294,7 @@ models:
     venv: apptainer
     log_dir: /projects/bbwb/rohan13/llm-inference/logs
     model_weights_parent_dir: /projects/bbwb/rohan13/llm-inference/model-weights
-    huggingface_id: e5-mistral-7b-instruct
+    huggingface_id: intfloat/e5-mistral-7b-instruct
   bge-base-en-v1.5:
     model_family: bge
     model_variant: base-en-v1.5
@@ -1312,7 +1312,7 @@ models:
     venv: apptainer
     log_dir: /projects/bbwb/rohan13/llm-inference/logs
     model_weights_parent_dir: /projects/bbwb/rohan13/llm-inference/model-weights
-    huggingface_id: bge-base-en-v1.5
+    huggingface_id: BAAI/bge-base-en-v1.5
   all-MiniLM-L6-v2:
     model_family: all-MiniLM
     model_variant: L6-v2
@@ -1330,7 +1330,7 @@ models:
     venv: apptainer
     log_dir: /projects/bbwb/rohan13/llm-inference/logs
     model_weights_parent_dir: /projects/bbwb/rohan13/llm-inference/model-weights
-    huggingface_id: all-MiniLM-L6-v2
+    huggingface_id: sentence-transformers/all-MiniLM-L6-v2
   InternVL2_5-26B:
     model_family: InternVL2_5
     model_variant: 26B
@@ -1402,12 +1402,12 @@ models:
     venv: apptainer
     log_dir: /projects/bbwb/rohan13/llm-inference/logs
     model_weights_parent_dir: /projects/bbwb/rohan13/llm-inference/model-weights
-    huggingface_id: DeepSeek-R1-Distill-Llama-70B
+    huggingface_id: deepseek-ai/DeepSeek-R1-Distill-Llama-70B
   DeepSeek-R1-Distill-Llama-8B:
     model_family: DeepSeek-R1
     model_variant: 'Distill-Llama-8B '
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 128256
     max_model_len: 131072
@@ -1420,12 +1420,12 @@ models:
     venv: apptainer
     log_dir: /projects/bbwb/rohan13/llm-inference/logs
     model_weights_parent_dir: /projects/bbwb/rohan13/llm-inference/model-weights
-    huggingface_id: DeepSeek-R1-Distill-Llama-8B
+    huggingface_id: deepseek-ai/DeepSeek-R1-Distill-Llama-8B
   DeepSeek-R1-Distill-Qwen-32B:
     model_family: DeepSeek-R1
     model_variant: Distill-Qwen-32B
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 152064
     max_model_len: 131072
@@ -1438,12 +1438,12 @@ models:
     venv: apptainer
     log_dir: /projects/bbwb/rohan13/llm-inference/logs
     model_weights_parent_dir: /projects/bbwb/rohan13/llm-inference/model-weights
-    huggingface_id: DeepSeek-R1-Distill-Qwen-32B
+    huggingface_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-32B
   DeepSeek-R1-Distill-Qwen-14B:
     model_family: DeepSeek-R1
     model_variant: Distill-Qwen-14B
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 152064
     max_model_len: 131072
@@ -1456,12 +1456,12 @@ models:
     venv: apptainer
     log_dir: /projects/bbwb/rohan13/llm-inference/logs
     model_weights_parent_dir: /projects/bbwb/rohan13/llm-inference/model-weights
-    huggingface_id: DeepSeek-R1-Distill-Qwen-14B
+    huggingface_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-14B
   DeepSeek-R1-Distill-Qwen-7B:
     model_family: DeepSeek-R1
     model_variant: Distill-Qwen-7B
     model_type: LLM
-    num_gpus: 1
+    num_gpus: 2
     num_nodes: 1
     vocab_size: 152064
     max_model_len: 131072
@@ -1474,7 +1474,7 @@ models:
     venv: apptainer
     log_dir: /projects/bbwb/rohan13/llm-inference/logs
     model_weights_parent_dir: /projects/bbwb/rohan13/llm-inference/model-weights
-    huggingface_id: DeepSeek-R1-Distill-Qwen-7B
+    huggingface_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
   DeepSeek-R1-Distill-Qwen-1.5B:
     model_family: DeepSeek-R1
     model_variant: Distill-Qwen-1.5B
@@ -1492,7 +1492,7 @@ models:
     venv: apptainer
     log_dir: /projects/bbwb/rohan13/llm-inference/logs
     model_weights_parent_dir: /projects/bbwb/rohan13/llm-inference/model-weights
-    huggingface_id: DeepSeek-R1-Distill-Qwen-1.5B
+    huggingface_id: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
   Llama-3.3-70B-Instruct:
     model_family: Llama-3.3
     model_variant: 70B-Instruct

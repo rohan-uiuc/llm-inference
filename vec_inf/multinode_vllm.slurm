@@ -12,6 +12,12 @@ module load cuda/11.7.0
 module load cudnn/8.4.0.27-11.6
 #module load anaconda3_gpu/4.13.0
 # module load cuda-12.2.1
+
+# Export GCC paths to help compiler find it in containers
+export GCC_PATH=/sw/spack/hydrogpu-2022-06/apps/gcc/11.3.0-gcc-8.4.1-kroofxa
+export PATH=$GCC_PATH/bin:$PATH
+export LD_LIBRARY_PATH=$GCC_PATH/lib64:$LD_LIBRARY_PATH
+
 nvidia-smi
 
 source ${SRC_DIR}/find_port.sh
@@ -20,6 +26,16 @@ if [ "$VENV_BASE" = "singularity" ]; then
     export SINGULARITY_IMAGE=/projects/bbwb/rohan13/llm-inference/vector-inference.sif
     export VLLM_NCCL_SO_PATH=/vec-inf/nccl/libnccl.so.2.18.1
     module load singularity-ce/3.8.2
+    
+    # Setup container environment on head node
+    srun --nodes=1 --ntasks=1 -w "$SLURMD_NODENAME" \
+    singularity exec --nv \
+    --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+    --bind ${GCC_PATH}:${GCC_PATH} \
+    --bind ${SRC_DIR}:${SRC_DIR} \
+    $SINGULARITY_IMAGE \
+    bash ${SRC_DIR}/container_setup.sh
+    
     singularity exec $SINGULARITY_IMAGE ray stop
 fi
 
@@ -57,8 +73,22 @@ echo "IP Head: $ip_head"
 
 echo "Starting HEAD at $head_node"
 if [ "$VENV_BASE" = "singularity" ]; then
+    # Setup container environment on head node
     srun --nodes=1 --ntasks=1 -w "$head_node" \
-        singularity exec --nv --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} $SINGULARITY_IMAGE \
+    singularity exec --nv \
+    --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+    --bind ${GCC_PATH}:${GCC_PATH} \
+    --bind ${SRC_DIR}:${SRC_DIR} \
+    $SINGULARITY_IMAGE \
+    bash ${SRC_DIR}/container_setup.sh
+    
+    srun --nodes=1 --ntasks=1 -w "$head_node" \
+        singularity exec --nv --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+        --bind ${GCC_PATH}:${GCC_PATH} \
+        --bind ${SRC_DIR}:${SRC_DIR} \
+        --env PATH=$PATH \
+        --env LD_LIBRARY_PATH=$LD_LIBRARY_PATH \
+        $SINGULARITY_IMAGE \
         ray start --head --node-ip-address="$head_node_ip" --port=$head_node_port \
         --num-cpus "${SLURM_CPUS_PER_TASK}" --num-gpus "${NUM_GPUS}" --block &
 else
@@ -78,8 +108,22 @@ for ((i = 1; i <= worker_num; i++)); do
     node_i=${nodes_array[$i]}
     echo "Starting WORKER $i at $node_i"
     if [ "$VENV_BASE" = "singularity" ]; then
+        # Setup container environment on worker node
         srun --nodes=1 --ntasks=1 -w "$node_i" \
-            singularity exec --nv --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} $SINGULARITY_IMAGE \
+        singularity exec --nv \
+        --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+        --bind ${GCC_PATH}:${GCC_PATH} \
+        --bind ${SRC_DIR}:${SRC_DIR} \
+        $SINGULARITY_IMAGE \
+        bash ${SRC_DIR}/container_setup.sh
+        
+        srun --nodes=1 --ntasks=1 -w "$node_i" \
+            singularity exec --nv --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+            --bind ${GCC_PATH}:${GCC_PATH} \
+            --bind ${SRC_DIR}:${SRC_DIR} \
+            --env PATH=$PATH \
+            --env LD_LIBRARY_PATH=$LD_LIBRARY_PATH \
+            $SINGULARITY_IMAGE \
             ray start --address "$ip_head" \
             --num-cpus "${SLURM_CPUS_PER_TASK}" --num-gpus "${NUM_GPUS}" --block &
     else
@@ -112,7 +156,20 @@ fi
 
 # Activate vllm venv
 if [ "$VENV_BASE" = "singularity" ]; then
-    singularity exec --nv --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} $SINGULARITY_IMAGE \
+    # Setup container environment for main process
+    singularity exec --nv \
+    --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+    --bind ${GCC_PATH}:${GCC_PATH} \
+    --bind ${SRC_DIR}:${SRC_DIR} \
+    $SINGULARITY_IMAGE \
+    bash ${SRC_DIR}/container_setup.sh
+    
+    singularity exec --nv --bind ${MODEL_WEIGHTS_PARENT_DIR}:${MODEL_WEIGHTS_PARENT_DIR} \
+    --bind ${GCC_PATH}:${GCC_PATH} \
+    --bind ${SRC_DIR}:${SRC_DIR} \
+    --env PATH=$PATH \
+    --env LD_LIBRARY_PATH=$LD_LIBRARY_PATH \
+    $SINGULARITY_IMAGE \
     python3.10 -m vllm.entrypoints.openai.api_server \
     --model ${VLLM_MODEL_WEIGHTS} \
     --served-model-name ${JOB_NAME} \
