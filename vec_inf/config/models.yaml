@@ -11,7 +11,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -30,7 +30,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -49,7 +49,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -68,7 +68,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -87,7 +87,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -106,7 +106,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -125,7 +125,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -144,7 +144,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -163,7 +163,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -182,7 +182,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -201,7 +201,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -220,7 +220,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -239,7 +239,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -258,7 +258,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -277,7 +277,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -296,7 +296,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -315,7 +315,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -334,7 +334,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -353,7 +353,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -372,7 +372,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -391,7 +391,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -410,7 +410,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -429,7 +429,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -448,7 +448,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -467,7 +467,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -486,7 +486,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -505,7 +505,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -524,7 +524,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -543,7 +543,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -562,7 +562,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -581,7 +581,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -600,7 +600,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -619,7 +619,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -638,7 +638,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -676,7 +676,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -695,7 +695,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -714,7 +714,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -733,7 +733,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -752,7 +752,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -771,7 +771,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -790,7 +790,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -809,7 +809,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -828,7 +828,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -847,7 +847,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -866,7 +866,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -885,7 +885,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -904,7 +904,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -923,7 +923,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -942,7 +942,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -961,7 +961,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -980,7 +980,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -999,7 +999,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1018,7 +1018,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: false
     enforce_eager: true
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1037,7 +1037,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: false
     enforce_eager: true
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1056,7 +1056,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: false
     enforce_eager: true
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1075,7 +1075,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: false
     enforce_eager: true
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1094,7 +1094,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1113,7 +1113,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1132,7 +1132,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1151,7 +1151,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1170,7 +1170,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1189,7 +1189,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1208,7 +1208,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1227,7 +1227,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1246,7 +1246,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1265,7 +1265,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1284,7 +1284,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1303,7 +1303,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1322,7 +1322,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1341,7 +1341,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1360,7 +1360,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1379,7 +1379,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1398,7 +1398,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1417,7 +1417,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1436,7 +1436,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1455,7 +1455,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1474,7 +1474,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1493,7 +1493,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1512,7 +1512,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1531,7 +1531,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1550,7 +1550,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1569,7 +1569,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1588,7 +1588,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
@@ -1607,7 +1607,7 @@ models:
     gpu_memory_utilization: 0.9
     pipeline_parallelism: true
     enforce_eager: false
-    qos: m2
+    qos: normal
     time: 08:00:00
     partition: a40
     data_type: auto
