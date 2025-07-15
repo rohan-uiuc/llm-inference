@@ -4,6 +4,7 @@ import json
 import traceback
 from contextlib import ExitStack
 from pathlib import Path
+from typing import Callable, Optional
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -67,6 +68,9 @@ def path_exists(mock_exists, test_config_dir):
     def _exists(p):
         # Allow access to the default config file
         if str(p).endswith("config/models.yaml"):
+            return True
+        # Allow access to the default log directory
+        if str(p).endswith(".vec-inf-logs"):
             return True
         # Use mock_exists for other paths
         return mock_exists(p)
@@ -143,25 +147,46 @@ def test_paths():
 def mock_truediv(test_paths):
     """Fixture providing path joining mock."""
 
-    def _mock_truediv(self, other):
-        if str(self) == str(test_paths["weights_dir"]) and other == "unknown-model":
-            return test_paths["unknown_model"]
-        if str(self) == str(test_paths["log_dir"]):
-            return test_paths["log_dir"] / other
-        if str(self) == str(test_paths["log_dir"] / "model_family_placeholder"):
-            return test_paths["log_dir"] / "model_family_placeholder" / other
-        return Path(str(self)) / str(other)
+    def _mock_truediv(*args):
+        # Handle the case where it's called with just one argument
+        if len(args) == 1:
+            other = args[0]
+            return test_paths.get(other, Path(str(other)))
+
+        # Normal case with self and other
+        self, other = args
+        specific_paths = {
+            (str(test_paths["weights_dir"]), "unknown-model"): test_paths[
+                "unknown_model"
+            ],
+            (str(test_paths["log_dir"]), other): test_paths["log_dir"] / other,
+            (
+                str(test_paths["log_dir"] / "model_family_placeholder"),
+                other,
+            ): test_paths["log_dir"] / "model_family_placeholder" / other,
+            ("/home/user", ".vec-inf-logs"): test_paths["log_dir"],
+        }
+
+        return specific_paths.get((str(self), other), Path(str(self)) / str(other))
 
     return _mock_truediv
 
 
-def create_path_exists(test_paths, path_exists, exists_paths=None):
+def create_path_exists(
+    test_paths: dict[Path, str],
+    path_exists: Callable[[Path], bool],
+    exists_paths: Optional[list[Path]] = None,
+):
     """Create a path existence checker.
 
-    Args:
-        test_paths: Dictionary containing test paths
-        path_exists: Default path existence checker
-        exists_paths: Optional list of paths that should exist
+    Parameters
+    ----------
+    test_paths: dict[Path, str]
+        Dictionary containing test paths
+    path_exists: Callable[[Path], bool]
+        Default path existence checker
+    exists_paths: Optional[list[Path]]
+        Optional list of paths that should exist
     """
 
     def _custom_path_exists(p):
@@ -201,31 +226,44 @@ def base_patches(test_paths, mock_truediv, debug_helper):
             "pathlib.Path.parent", return_value=debug_helper.config_file.parent.parent
         ),
         patch("pathlib.Path.__truediv__", side_effect=mock_truediv),
+        patch("pathlib.Path.iterdir", return_value=[]),
         patch("json.dump"),
         patch("pathlib.Path.touch"),
-        patch("vec_inf.cli._helper.Path", return_value=test_paths["weights_dir"]),
+        patch("vec_inf.client._utils.Path", return_value=test_paths["weights_dir"]),
+        patch("pathlib.Path.home", return_value=Path("/home/user")),
+        patch("pathlib.Path.rename"),
     ]
 
 
-def test_launch_command_success(runner, mock_launch_output, path_exists, debug_helper):
-    """Test successful model launch with minimal required arguments."""
-    test_log_dir = Path("/tmp/test_vec_inf_logs")
+@pytest.fixture
+def apply_base_patches(base_patches):
+    """Fixture to apply all base patches."""
+    with ExitStack() as stack:
+        # Apply all patches
+        for patch_obj in base_patches:
+            stack.enter_context(patch_obj)
+        yield
 
-    with (
-        patch("vec_inf.cli._utils.run_bash_command") as mock_run,
-        patch("pathlib.Path.mkdir"),
-        patch("builtins.open", debug_helper.tracked_mock_open),
-        patch("pathlib.Path.open", debug_helper.tracked_mock_open),
-        patch("pathlib.Path.exists", new=path_exists),
-        patch("pathlib.Path.expanduser", return_value=test_log_dir),
-        patch("pathlib.Path.resolve", return_value=debug_helper.config_file.parent),
-        patch(
-            "pathlib.Path.parent", return_value=debug_helper.config_file.parent.parent
-        ),
-        patch("json.dump"),
-        patch("pathlib.Path.touch"),
-        patch("pathlib.Path.__truediv__", return_value=test_log_dir),
-    ):
+
+def test_launch_command_success(
+    runner,
+    mock_launch_output,
+    path_exists,
+    debug_helper,
+    mock_truediv,
+    test_paths,
+    base_patches,
+):
+    """Test successful model launch with minimal required arguments."""
+    with ExitStack() as stack:
+        # Apply all base patches
+        for patch_obj in base_patches:
+            stack.enter_context(patch_obj)
+
+        # Apply specific patches for this test
+        mock_run = stack.enter_context(patch("vec_inf.client._utils.run_bash_command"))
+        stack.enter_context(patch("pathlib.Path.exists", new=path_exists))
+
         expected_job_id = "14933053"
         mock_run.return_value = mock_launch_output(expected_job_id)
 
@@ -238,25 +276,24 @@ def test_launch_command_success(runner, mock_launch_output, path_exists, debug_h
 
 
 def test_launch_command_with_json_output(
-    runner, mock_launch_output, path_exists, debug_helper
+    runner,
+    mock_launch_output,
+    path_exists,
+    debug_helper,
+    mock_truediv,
+    test_paths,
+    base_patches,
 ):
     """Test JSON output format for launch command."""
-    test_log_dir = Path("/tmp/test_vec_inf_logs")
-    with (
-        patch("vec_inf.cli._utils.run_bash_command") as mock_run,
-        patch("pathlib.Path.mkdir"),
-        patch("builtins.open", debug_helper.tracked_mock_open),
-        patch("pathlib.Path.open", debug_helper.tracked_mock_open),
-        patch("pathlib.Path.exists", new=path_exists),
-        patch("pathlib.Path.expanduser", return_value=test_log_dir),
-        patch("pathlib.Path.resolve", return_value=debug_helper.config_file.parent),
-        patch(
-            "pathlib.Path.parent", return_value=debug_helper.config_file.parent.parent
-        ),
-        patch("json.dump"),
-        patch("pathlib.Path.touch"),
-        patch("pathlib.Path.__truediv__", return_value=test_log_dir),
-    ):
+    with ExitStack() as stack:
+        # Apply all base patches
+        for patch_obj in base_patches:
+            stack.enter_context(patch_obj)
+
+        # Apply specific patches for this test
+        mock_run = stack.enter_context(patch("vec_inf.client._utils.run_bash_command"))
+        stack.enter_context(patch("pathlib.Path.exists", new=path_exists))
+
         expected_job_id = "14933051"
         mock_run.return_value = mock_launch_output(expected_job_id)
 
@@ -280,7 +317,24 @@ def test_launch_command_with_json_output(
         assert output.get("slurm_job_id") == expected_job_id
         assert output.get("model_name") == "Meta-Llama-3.1-8B"
         assert output.get("model_type") == "LLM"
-        assert str(test_log_dir) in output.get("log_dir", "")
+        assert str(test_paths["log_dir"]) in output.get("log_dir", "")
+
+
+def test_launch_command_no_model_weights_parent_dir(runner, debug_helper, base_patches):
+    """Test handling when model weights parent dir is not set."""
+    with ExitStack() as stack:
+        # Apply all base patches
+        for patch_obj in base_patches:
+            stack.enter_context(patch_obj)
+
+        # Mock load_config to return empty list
+        stack.enter_context(patch("vec_inf.client._utils.load_config", return_value=[]))
+
+        result = runner.invoke(cli, ["launch", "test-model"])
+        debug_helper.print_debug_info(result)
+
+        assert result.exit_code == 1
+        assert "Could not determine model weights parent directory" in result.output
 
 
 def test_launch_command_model_not_in_config_with_weights(
@@ -301,25 +355,24 @@ def test_launch_command_model_not_in_config_with_weights(
         for patch_obj in base_patches:
             stack.enter_context(patch_obj)
         # Apply specific patches for this test
-        mock_run = stack.enter_context(patch("vec_inf.cli._utils.run_bash_command"))
+        mock_run = stack.enter_context(patch("vec_inf.client._utils.run_bash_command"))
         stack.enter_context(patch("pathlib.Path.exists", new=custom_path_exists))
 
         expected_job_id = "14933051"
         mock_run.return_value = mock_launch_output(expected_job_id)
 
-        result = runner.invoke(cli, ["launch", "unknown-model"])
-        debug_helper.print_debug_info(result)
+        with pytest.warns(UserWarning) as record:
+            result = runner.invoke(cli, ["launch", "unknown-model"])
+            debug_helper.print_debug_info(result)
 
         assert result.exit_code == 0
-        assert (
-            "Warning: 'unknown-model' configuration not found in config"
-            in result.output
+        assert len(record) == 1
+        assert str(record[0].message) == (
+            "Warning: 'unknown-model' configuration not found in config, please ensure model configuration are properly set in command arguments"
         )
 
 
-def test_launch_command_model_not_found(
-    runner, path_exists, debug_helper, test_paths, base_patches
-):
+def test_launch_command_model_not_found(runner, debug_helper, test_paths, base_patches):
     """Test handling of a model that's neither in config nor has weights."""
 
     def custom_path_exists(p):
@@ -342,7 +395,7 @@ def test_launch_command_model_not_found(
 
         # Mock Path to return the weights dir path
         stack.enter_context(
-            patch("vec_inf.cli._helper.Path", return_value=test_paths["weights_dir"])
+            patch("vec_inf.client._utils.Path", return_value=test_paths["weights_dir"])
         )
 
         result = runner.invoke(cli, ["launch", "unknown-model"])
@@ -350,8 +403,8 @@ def test_launch_command_model_not_found(
 
         assert result.exit_code == 1
         assert (
-            "'unknown-model' not found in configuration and model weights not found"
-            in result.output
+            "'unknown-model' not found in configuration and model weights "
+            "not found at expected path '/model-weights/unknown-model'" in result.output
         )
 
 
@@ -374,13 +427,13 @@ def test_list_single_model(runner):
 
 
 def test_metrics_command_pending_server(
-    runner, mock_status_output, path_exists, debug_helper
+    runner, mock_status_output, path_exists, debug_helper, apply_base_patches
 ):
     """Test metrics command when server is pending."""
     with (
-        patch("vec_inf.cli._utils.run_bash_command") as mock_run,
+        patch("vec_inf.client._utils.run_bash_command") as mock_run,
         patch("pathlib.Path.exists", new=path_exists),
-        patch("vec_inf.cli._utils.get_base_url", return_value="URL NOT FOUND"),
+        patch("vec_inf.client._utils.get_base_url", return_value="URL NOT FOUND"),
     ):
         job_id = 12345
         mock_run.return_value = (mock_status_output(job_id, "PENDING"), "")
@@ -389,22 +442,18 @@ def test_metrics_command_pending_server(
         debug_helper.print_debug_info(result)
 
         assert result.exit_code == 0
-        assert "Server State" in result.output
-        assert "PENDING" in result.output
-        assert (
-            "Metrics endpoint unavailable - Pending resources for server"
-            in result.output
-        )
+        assert "ERROR" in result.output
+        assert "Pending resources for server initialization" in result.output
 
 
 def test_metrics_command_server_not_ready(
-    runner, mock_status_output, path_exists, debug_helper
+    runner, mock_status_output, path_exists, debug_helper, apply_base_patches
 ):
     """Test metrics command when server is running but not ready."""
     with (
-        patch("vec_inf.cli._utils.run_bash_command") as mock_run,
+        patch("vec_inf.client._utils.run_bash_command") as mock_run,
         patch("pathlib.Path.exists", new=path_exists),
-        patch("vec_inf.cli._utils.get_base_url", return_value="Server not ready"),
+        patch("vec_inf.client._utils.get_base_url", return_value="Server not ready"),
     ):
         job_id = 12345
         mock_run.return_value = (mock_status_output(job_id, "RUNNING"), "")
@@ -413,14 +462,13 @@ def test_metrics_command_server_not_ready(
         debug_helper.print_debug_info(result)
 
         assert result.exit_code == 0
-        assert "Server State" in result.output
-        assert "RUNNING" in result.output
+        assert "ERROR" in result.output
         assert "Server not ready" in result.output
 
 
-@patch("vec_inf.cli._helper.requests.get")
+@patch("requests.get")
 def test_metrics_command_server_ready(
-    mock_get, runner, mock_status_output, path_exists, debug_helper
+    mock_get, runner, mock_status_output, path_exists, debug_helper, apply_base_patches
 ):
     """Test metrics command when server is ready and returning metrics."""
     metrics_response = """
@@ -439,9 +487,9 @@ vllm:gpu_cache_usage_perc{model_name="test-model"} 0.5
     mock_response.status_code = 200
 
     with (
-        patch("vec_inf.cli._utils.run_bash_command") as mock_run,
+        patch("vec_inf.client._utils.run_bash_command") as mock_run,
         patch("pathlib.Path.exists", new=path_exists),
-        patch("vec_inf.cli._utils.get_base_url", return_value="http://test:8000/v1"),
+        patch("vec_inf.client._utils.get_base_url", return_value="http://test:8000/v1"),
         patch("time.sleep", side_effect=KeyboardInterrupt),  # Break the infinite loop
     ):
         job_id = 12345
@@ -457,17 +505,17 @@ vllm:gpu_cache_usage_perc{model_name="test-model"} 0.5
         assert "50.0%" in result.output  # 0.5 converted to percentage
 
 
-@patch("vec_inf.cli._helper.requests.get")
+@patch("requests.get")
 def test_metrics_command_request_failed(
-    mock_get, runner, mock_status_output, path_exists, debug_helper
+    mock_get, runner, mock_status_output, path_exists, debug_helper, apply_base_patches
 ):
     """Test metrics command when request to metrics endpoint fails."""
     mock_get.side_effect = requests.exceptions.RequestException("Connection refused")
 
     with (
-        patch("vec_inf.cli._utils.run_bash_command") as mock_run,
+        patch("vec_inf.client._utils.run_bash_command") as mock_run,
         patch("pathlib.Path.exists", new=path_exists),
-        patch("vec_inf.cli._utils.get_base_url", return_value="http://test:8000/v1"),
+        patch("vec_inf.client._utils.get_base_url", return_value="http://test:8000/v1"),
         patch("time.sleep", side_effect=KeyboardInterrupt),  # Break the infinite loop
     ):
         job_id = 12345
@@ -477,10 +525,83 @@ def test_metrics_command_request_failed(
         debug_helper.print_debug_info(result)
 
         # KeyboardInterrupt is expected and ok
-        assert "Server State" in result.output
-        assert "RUNNING" in result.output
+        assert "ERROR" in result.output
         assert (
             "Metrics request failed, `metrics` endpoint might not be ready"
             in result.output
         )
         assert "Connection refused" in result.output
+
+
+def test_cli_cleanup_logs_dry_run(runner, tmp_path):
+    """Test CLI cleanup command in dry-run mode."""
+    model_dir = tmp_path / "fam_a" / "model_a.123"
+    model_dir.mkdir(parents=True)
+
+    result = runner.invoke(
+        cli,
+        [
+            "cleanup",
+            "--log-dir",
+            str(tmp_path),
+            "--model-family",
+            "fam_a",
+            "--model-name",
+            "model_a",
+            "--dry-run",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "would be deleted" in result.output
+    assert "model_a.123" in result.output
+
+
+def test_cli_cleanup_logs_delete(tmp_path):
+    """Test cleanup_logs CLI deletes matching directories when not in dry-run mode."""
+    fam_dir = tmp_path / "fam_a"
+    fam_dir.mkdir()
+    (fam_dir / "model_a.1").mkdir()
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "cleanup",
+            "--log-dir",
+            str(tmp_path),
+            "--model-family",
+            "fam_a",
+            "--model-name",
+            "model_a",
+            "--job-id",
+            "1",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Deleted 1 log directory" in result.output
+    assert not (fam_dir / "model_a.1").exists()
+
+
+def test_cli_cleanup_logs_no_match(tmp_path):
+    """Test cleanup_logs CLI when no directories match the filters."""
+    fam_dir = tmp_path / "fam_a"
+    fam_dir.mkdir()
+    (fam_dir / "model_a.1").mkdir()
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "cleanup",
+            "--log-dir",
+            str(tmp_path),
+            "--model-family",
+            "fam_b",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "No matching log directories were deleted." in result.output
+    assert (fam_dir / "model_a.1").exists()
