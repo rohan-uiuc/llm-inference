@@ -7,7 +7,7 @@ configurations, including hardware requirements and model specifications.
 from pathlib import Path
 from typing import Any, Optional, Union, cast
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing_extensions import Literal
 
 from vec_inf.client.slurm_vars import (
@@ -119,7 +119,7 @@ class ModelConfig(BaseModel):
         default=None, description="Additional binds for the singularity container"
     )
     venv: str = Field(
-        default="singularity", description="Virtual environment/container system"
+        default="singularity", description="Virtual environment/container system (singularity, apptainer, or path to venv)"
     )
     log_dir: Path = Field(
         default=Path(cast(str, DEFAULT_ARGS["log_dir"])),
@@ -132,6 +132,15 @@ class ModelConfig(BaseModel):
     vllm_args: Optional[dict[str, Any]] = Field(
         default={}, description="vLLM engine arguments"
     )
+
+    @field_validator("venv")
+    @classmethod
+    def validate_venv(cls, v: str) -> str:
+        """Validate that venv is one of the supported options."""
+        valid_options = ["singularity", "apptainer"]
+        if v in valid_options or (isinstance(v, str) and "/" in v):
+            return v
+        raise ValueError(f"venv must be one of {valid_options} or a path to a virtual environment")
 
     model_config = ConfigDict(
         extra="forbid", str_strip_whitespace=True, validate_default=True, frozen=True

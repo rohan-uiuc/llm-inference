@@ -7,6 +7,8 @@ single-node, multi-node, and batch mode templates.
 from typing import TypedDict
 
 from vec_inf.client.slurm_vars import (
+    APPTAINER_IMAGE,
+    APPTAINER_LOAD_CMD,
     LD_LIBRARY_PATH,
     SINGULARITY_IMAGE,
     SINGULARITY_LOAD_CMD,
@@ -53,12 +55,16 @@ class SlurmScriptTemplate(TypedDict):
         Shebang and SLURM directive configuration
     singularity_setup : list[str]
         Commands for Singularity container setup
+    apptainer_setup : list[str]
+        Commands for Apptainer container setup
     imports : str
         Import statements and source commands
     env_vars : list[str]
         Environment variables to set
     singularity_command : str
         Template for Singularity execution command
+    apptainer_command : str
+        Template for Apptainer execution command
     activate_venv : str
         Template for virtual environment activation
     server_setup : ServerSetupConfig
@@ -95,12 +101,17 @@ SLURM_SCRIPT_TEMPLATE: SlurmScriptTemplate = {
         SINGULARITY_LOAD_CMD,
         f"singularity exec {SINGULARITY_IMAGE} ray stop",
     ],
+    "apptainer_setup": [
+        APPTAINER_LOAD_CMD,
+        f"apptainer exec {APPTAINER_IMAGE} ray stop",
+    ],
     "imports": "source {src_dir}/find_port.sh",
     "env_vars": [
         f"export LD_LIBRARY_PATH={LD_LIBRARY_PATH}",
         f"export VLLM_NCCL_SO_PATH={VLLM_NCCL_SO_PATH}",
     ],
     "singularity_command": f"singularity exec --nv --bind {{model_weights_path}}{{additional_binds}} --containall {SINGULARITY_IMAGE} \\",
+    "apptainer_command": f"apptainer exec --nv --bind {{model_weights_path}}{{additional_binds}} --containall {APPTAINER_IMAGE} \\",
     "activate_venv": "source {venv}/bin/activate",
     "server_setup": {
         "single_node": [
@@ -168,6 +179,8 @@ class BatchSlurmScriptTemplate(TypedDict):
         SLURM directive for hetjob
     singularity_setup : list[str]
         Commands for Singularity container setup
+    apptainer_setup : list[str]
+        Commands for Apptainer container setup
     env_vars : list[str]
         Environment variables to set
     permission_update : str
@@ -188,6 +201,7 @@ BATCH_SLURM_SCRIPT_TEMPLATE: BatchSlurmScriptTemplate = {
     "shebang": "#!/bin/bash\n#SBATCH --output={out_file}\n#SBATCH --error={err_file}\n",
     "hetjob": "#SBATCH hetjob\n",
     "singularity_setup": f"{SINGULARITY_LOAD_CMD}\n",
+    "apptainer_setup": f"{APPTAINER_LOAD_CMD}\n",
     "env_vars": [
         f"export LD_LIBRARY_PATH={LD_LIBRARY_PATH}",
         f"export VLLM_NCCL_SO_PATH={VLLM_NCCL_SO_PATH}\n",
@@ -215,6 +229,8 @@ class BatchModelLaunchScriptTemplate(TypedDict):
         Commands to launch the vLLM server
     singularity_command : str
         Commands to setup the singularity command
+    apptainer_command : str
+        Commands to setup the apptainer command
     """
 
     shebang: str
@@ -241,6 +257,7 @@ BATCH_MODEL_LAUNCH_SCRIPT_TEMPLATE: BatchModelLaunchScriptTemplate = {
         '    && mv temp_{model_name}.json "$json_path"\n',
     ],
     "singularity_command": f"singularity exec --nv --bind {{model_weights_path}}{{additional_binds}} --containall {SINGULARITY_IMAGE} \\",
+    "apptainer_command": f"apptainer exec --nv --bind {{model_weights_path}}{{additional_binds}} --containall {APPTAINER_IMAGE} \\",
     "launch_cmd": [
         "vllm serve {model_weights_path} \\",
         "    --served-model-name {model_name} \\",

@@ -33,6 +33,7 @@ class SlurmScriptGenerator:
         self.params = params
         self.is_multinode = int(self.params["num_nodes"]) > 1
         self.use_singularity = self.params["venv"] == "singularity"
+        self.use_apptainer = self.params["venv"] == "apptainer"
         self.additional_binds = self.params.get("bind", "")
         if self.additional_binds:
             self.additional_binds = f" --bind {self.additional_binds}"
@@ -84,6 +85,8 @@ class SlurmScriptGenerator:
         server_script = ["\n"]
         if self.use_singularity:
             server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["singularity_setup"]))
+        elif self.use_apptainer:
+            server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["apptainer_setup"]))
         server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["env_vars"]))
         server_script.append(
             SLURM_SCRIPT_TEMPLATE["imports"].format(src_dir=self.params["src_dir"])
@@ -96,6 +99,14 @@ class SlurmScriptGenerator:
                 server_setup_str = server_setup_str.replace(
                     "SINGULARITY_PLACEHOLDER",
                     SLURM_SCRIPT_TEMPLATE["singularity_command"].format(
+                        model_weights_path=self.model_weights_path,
+                        additional_binds=self.additional_binds,
+                    ),
+                )
+            elif self.use_apptainer:
+                server_setup_str = server_setup_str.replace(
+                    "SINGULARITY_PLACEHOLDER",
+                    SLURM_SCRIPT_TEMPLATE["apptainer_command"].format(
                         model_weights_path=self.model_weights_path,
                         additional_binds=self.additional_binds,
                     ),
@@ -128,6 +139,13 @@ class SlurmScriptGenerator:
         if self.use_singularity:
             launcher_script.append(
                 SLURM_SCRIPT_TEMPLATE["singularity_command"].format(
+                    model_weights_path=self.model_weights_path,
+                    additional_binds=self.additional_binds,
+                )
+            )
+        elif self.use_apptainer:
+            launcher_script.append(
+                SLURM_SCRIPT_TEMPLATE["apptainer_command"].format(
                     model_weights_path=self.model_weights_path,
                     additional_binds=self.additional_binds,
                 )
@@ -182,6 +200,7 @@ class BatchSlurmScriptGenerator:
         self.params = params
         self.script_paths: list[Path] = []
         self.use_singularity = self.params["venv"] == "singularity"
+        self.use_apptainer = self.params["venv"] == "apptainer"
         for model_name in self.params["models"]:
             self.params["models"][model_name]["additional_binds"] = ""
             if self.params["models"][model_name].get("bind"):
@@ -245,6 +264,13 @@ class BatchSlurmScriptGenerator:
                     additional_binds=model_params["additional_binds"],
                 )
             )
+        elif self.use_apptainer:
+            script_content.append(
+                BATCH_MODEL_LAUNCH_SCRIPT_TEMPLATE["apptainer_command"].format(
+                    model_weights_path=model_params["model_weights_path"],
+                    additional_binds=model_params["additional_binds"],
+                )
+            )
         script_content.append(
             "\n".join(BATCH_MODEL_LAUNCH_SCRIPT_TEMPLATE["launch_cmd"]).format(
                 model_weights_path=model_params["model_weights_path"],
@@ -301,6 +327,8 @@ class BatchSlurmScriptGenerator:
         script_content.append(self._generate_batch_slurm_script_shebang())
         if self.use_singularity:
             script_content.append(BATCH_SLURM_SCRIPT_TEMPLATE["singularity_setup"])
+        elif self.use_apptainer:
+            script_content.append(BATCH_SLURM_SCRIPT_TEMPLATE["apptainer_setup"])
         script_content.append("\n".join(BATCH_SLURM_SCRIPT_TEMPLATE["env_vars"]))
 
         for model_name in self.params["models"]:
