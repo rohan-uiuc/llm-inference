@@ -71,17 +71,26 @@ class SlurmScriptGenerator:
         # Check if this is a Docker URI (starts with docker://)
         is_docker_uri = container_image.startswith("docker://")
         
-        # Build the base command
+        # Build the base command and forward CUDA + HuggingFace cache env vars into container
         if container_type == "singularity":
-            base_cmd = "singularity exec --nv"
+            base_cmd = (
+                "singularity exec --nv --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES "
+                "--env HF_HOME=$HF_HOME --env TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE"
+            )
         else:  # apptainer
-            base_cmd = "apptainer exec --nv"
+            base_cmd = (
+                "apptainer exec --nv --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES "
+                "--env HF_HOME=$HF_HOME --env TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE"
+            )
         
-        # Add binds
+        # Always bind HuggingFace cache path for downloads
+        cache_bind = " --bind /projects/illinois/ovcri/ncsa/rohan13/huggingface"
+
+        # Add binds (model weights + cache + additional binds)
         if is_hf_model:
-            binds = self.additional_binds
+            binds = f"{cache_bind}{self.additional_binds}"
         else:
-            binds = f" --bind {self.model_weights_path}{self.additional_binds}"
+            binds = f" --bind {self.model_weights_path}{cache_bind}{self.additional_binds}"
         
         # Add containall flag only for .sif files (not Docker URIs)
         containall_flag = "" if is_docker_uri else " --containall"
