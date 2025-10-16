@@ -40,6 +40,62 @@ class SlurmScriptGenerator:
         self.model_weights_path = str(
             Path(self.params["model_weights_parent_dir"], self.params["model_name"])
         )
+        # Override container image if specified
+        self.container_image = self.params.get("container_image")
+    
+    def _get_container_command(self, container_type: str) -> str:
+        """Get the container command with optional image override.
+
+        Parameters
+        ----------
+        container_type : str
+            Type of container ("singularity" or "apptainer")
+            
+        Returns
+        -------
+        str
+            Formatted container command
+        """
+        # Check if we're using a Hugging Face model ID by checking if local weights exist
+        # If model_weights_path doesn't exist, assume it's a HF model ID
+        model_weights_path = Path(self.params.get("model_weights_parent_dir", "/tmp"), self.params.get("model_name", ""))
+        is_hf_model = not model_weights_path.exists()
+        
+        # Determine which container image to use
+        from .slurm_vars import SINGULARITY_IMAGE, APPTAINER_IMAGE
+        container_image = self.container_image if self.container_image else (
+            SINGULARITY_IMAGE if container_type == "singularity" 
+            else APPTAINER_IMAGE
+        )
+        
+        # Check if this is a Docker URI (starts with docker://)
+        is_docker_uri = container_image.startswith("docker://")
+        
+        # Build the base command and forward CUDA + HuggingFace cache env vars into container
+        if container_type == "singularity":
+            base_cmd = (
+                "singularity exec --nv --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES "
+                "--env HF_HOME=$HF_HOME --env TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE"
+            )
+        else:  # apptainer
+            base_cmd = (
+                "apptainer exec --nv --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES "
+                "--env HF_HOME=$HF_HOME --env TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE"
+            )
+        
+        # Always bind HuggingFace cache path for downloads
+        cache_bind = " --bind /projects/illinois/ovcri/ncsa/rohan13/huggingface"
+
+        # Add binds (model weights + cache + additional binds)
+        if is_hf_model:
+            binds = f"{cache_bind}{self.additional_binds}"
+        else:
+            binds = f" --bind {self.model_weights_path}{cache_bind}{self.additional_binds}"
+        
+        # Add containall flag only for .sif files (not Docker URIs)
+        containall_flag = "" if is_docker_uri else " --containall"
+        
+        return f"{base_cmd}{binds}{containall_flag} {container_image} \\"
 
     def _generate_script_content(self) -> str:
         """Generate the complete Slurm script content.
@@ -84,9 +140,15 @@ class SlurmScriptGenerator:
         """
         server_script = ["\n"]
         if self.use_singularity:
-            server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["singularity_setup"]))
+            if self.container_image:
+                server_script.append(f"singularity exec {self.container_image} ray stop")
+            else:
+                server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["singularity_setup"]))
         elif self.use_apptainer:
-            server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["apptainer_setup"]))
+            if self.container_image:
+                server_script.append(f"apptainer exec {self.container_image} ray stop")
+            else:
+                server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["apptainer_setup"]))
         server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["env_vars"]))
         server_script.append(
             SLURM_SCRIPT_TEMPLATE["imports"].format(src_dir=self.params["src_dir"])
@@ -96,20 +158,16 @@ class SlurmScriptGenerator:
                 SLURM_SCRIPT_TEMPLATE["server_setup"]["multinode"]
             )
             if self.use_singularity:
+                container_cmd = self._get_container_command("singularity")
                 server_setup_str = server_setup_str.replace(
                     "SINGULARITY_PLACEHOLDER",
-                    SLURM_SCRIPT_TEMPLATE["singularity_command"].format(
-                        model_weights_path=self.model_weights_path,
-                        additional_binds=self.additional_binds,
-                    ),
+                    container_cmd,
                 )
             elif self.use_apptainer:
+                container_cmd = self._get_container_command("apptainer")
                 server_setup_str = server_setup_str.replace(
                     "SINGULARITY_PLACEHOLDER",
-                    SLURM_SCRIPT_TEMPLATE["apptainer_command"].format(
-                        model_weights_path=self.model_weights_path,
-                        additional_binds=self.additional_binds,
-                    ),
+                    container_cmd,
                 )
         else:
             server_setup_str = "\n".join(
@@ -117,9 +175,12 @@ class SlurmScriptGenerator:
             )
         server_script.append(server_setup_str)
         server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["find_vllm_port"]))
+        # Sanitize model name for file paths (replace "/" with "-")
+        safe_model_name = self.params["model_name"].replace("/", "-")
+        
         server_script.append(
             "\n".join(SLURM_SCRIPT_TEMPLATE["write_to_json"]).format(
-                log_dir=self.params["log_dir"], model_name=self.params["model_name"]
+                log_dir=self.params["log_dir"], model_name=safe_model_name
             )
         )
         return "\n".join(server_script)
@@ -138,30 +199,43 @@ class SlurmScriptGenerator:
         launcher_script = ["\n"]
         if self.use_singularity:
             launcher_script.append(
-                SLURM_SCRIPT_TEMPLATE["singularity_command"].format(
-                    model_weights_path=self.model_weights_path,
-                    additional_binds=self.additional_binds,
-                )
+                self._get_container_command("singularity")
             )
         elif self.use_apptainer:
             launcher_script.append(
-                SLURM_SCRIPT_TEMPLATE["apptainer_command"].format(
-                    model_weights_path=self.model_weights_path,
-                    additional_binds=self.additional_binds,
-                )
+                self._get_container_command("apptainer")
             )
         else:
             launcher_script.append(
                 SLURM_SCRIPT_TEMPLATE["activate_venv"].format(venv=self.params["venv"])
             )
-        launcher_script.append(
-            "\n".join(SLURM_SCRIPT_TEMPLATE["launch_cmd"]).format(
-                model_weights_path=self.model_weights_path,
-                model_name=self.params["model_name"],
+        # Check if we're using a Hugging Face model ID by checking if local weights exist
+        # If model_weights_path doesn't exist, assume it's a HF model ID
+        model_weights_path = Path(self.params.get("model_weights_parent_dir", "/tmp"), self.params.get("model_name", ""))
+        is_hf_model = not model_weights_path.exists()
+        model_name = self.params.get("model_name")
+        
+        if is_hf_model:
+            # Use Hugging Face model ID directly
+            launcher_script.append(
+                "\n".join(SLURM_SCRIPT_TEMPLATE["launch_cmd"]).format(
+                    model_weights_path=model_name,
+                    model_name=model_name.split("/")[-1],  # Use just the model name part
+                )
             )
-        )
+        else:
+            # Use local model path
+            launcher_script.append(
+                "\n".join(SLURM_SCRIPT_TEMPLATE["launch_cmd"]).format(
+                    model_weights_path=self.model_weights_path,
+                    model_name=self.params["model_name"],
+                )
+            )
 
         for arg, value in self.params["vllm_args"].items():
+            # Skip --model argument if we're using HF model ID as positional argument
+            if is_hf_model and arg == "--model":
+                continue
             if isinstance(value, bool):
                 launcher_script.append(f"    {arg} \\")
             else:
@@ -179,9 +253,11 @@ class SlurmScriptGenerator:
             Path to the generated Slurm script file.
         """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Sanitize model name for file paths (replace "/" with "-")
+        safe_model_name = self.params["model_name"].replace("/", "-")
         script_path: Path = (
             Path(self.params["log_dir"])
-            / f"launch_{self.params['model_name']}_{timestamp}.slurm"
+            / f"launch_{safe_model_name}_{timestamp}.slurm"
         )
 
         content = self._generate_script_content()

@@ -115,6 +115,11 @@ def cli() -> None:
     help="vLLM engine arguments to be set, use the format as specified in vLLM documentation and separate arguments with commas, e.g. --vllm-args '--max-model-len=8192,--max-num-seqs=256,--enable-prefix-caching'",
 )
 @click.option(
+    "--container-image",
+    type=str,
+    help="Path to container image file (.sif) to override default container path",
+)
+@click.option(
     "--json-mode",
     is_flag=True,
     help="Output in JSON string",

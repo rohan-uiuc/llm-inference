@@ -123,12 +123,26 @@ class ModelLauncher:
                 gpus_per_node=1,
                 num_nodes=1,
                 vocab_size=1000,
+                qos="normal",
+                partition="secondary",
                 model_weights_parent_dir=Path(str(model_weights_parent_dir)),
             )
 
-        raise ModelConfigurationError(
-            f"'{self.model_name}' not found in configuration and model weights "
-            f"not found at expected path '{model_weights_path}'"
+        # If weights don't exist, assume it's a Hugging Face model ID (like vLLM does)
+        self._warn(
+            f"Warning: '{self.model_name}' configuration not found in config and local weights not found. "
+            f"Assuming '{self.model_name}' is a Hugging Face model ID.",
+        )
+        return ModelConfig(
+            model_name=self.model_name,
+            model_family="hf_model_placeholder",
+            model_type="LLM",
+            gpus_per_node=1,
+            num_nodes=1,
+            vocab_size=1000,
+            qos="normal",
+            partition="secondary",
+            model_weights_parent_dir=Path(str(model_weights_parent_dir)),
         )
 
     def _process_vllm_args(self, arg_string: str) -> dict[str, Any]:
@@ -210,15 +224,18 @@ class ModelLauncher:
         params["log_dir"].mkdir(parents=True, exist_ok=True)
         params["src_dir"] = SRC_DIR
 
+        # Sanitize model name for file paths (replace "/" with "-")
+        safe_model_name = self.model_name.replace("/", "-")
+        
         # Construct slurm log file paths
         params["out_file"] = (
-            f"{params['log_dir']}/{self.model_name}.%j/{self.model_name}.%j.out"
+            f"{params['log_dir']}/{safe_model_name}.%j/{safe_model_name}.%j.out"
         )
         params["err_file"] = (
-            f"{params['log_dir']}/{self.model_name}.%j/{self.model_name}.%j.err"
+            f"{params['log_dir']}/{safe_model_name}.%j/{safe_model_name}.%j.err"
         )
         params["json_file"] = (
-            f"{params['log_dir']}/{self.model_name}.$SLURM_JOB_ID/{self.model_name}.$SLURM_JOB_ID.json"
+            f"{params['log_dir']}/{safe_model_name}.$SLURM_JOB_ID/{safe_model_name}.$SLURM_JOB_ID.json"
         )
 
         # Convert path to string for JSON serialization
@@ -263,20 +280,23 @@ class ModelLauncher:
         self.slurm_job_id = command_output.split(" ")[-1].strip().strip("\n")
         self.params["slurm_job_id"] = self.slurm_job_id
 
+        # Sanitize model name for file paths (replace "/" with "-")
+        safe_model_name = self.model_name.replace("/", "-")
+        
         # Create log directory and job json file, move slurm script to job log directory
         job_log_dir = Path(
-            self.params["log_dir"], f"{self.model_name}.{self.slurm_job_id}"
+            self.params["log_dir"], f"{safe_model_name}.{self.slurm_job_id}"
         )
         job_log_dir.mkdir(parents=True, exist_ok=True)
 
         job_json = Path(
             job_log_dir,
-            f"{self.model_name}.{self.slurm_job_id}.json",
+            f"{safe_model_name}.{self.slurm_job_id}.json",
         )
         job_json.touch(exist_ok=True)
 
         self.slurm_script_path.rename(
-            job_log_dir / f"{self.model_name}.{self.slurm_job_id}.slurm"
+            job_log_dir / f"{safe_model_name}.{self.slurm_job_id}.slurm"
         )
 
         with job_json.open("w") as file:

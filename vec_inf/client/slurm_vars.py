@@ -7,10 +7,11 @@ from typing_extensions import Literal
 
 CACHED_CONFIG = Path("/", "model-weights", "vec-inf-shared", "models_latest.yaml")
 LD_LIBRARY_PATH = "/scratch/ssd001/pkgs/cudnn-11.7-v8.5.0.96/lib/:/scratch/ssd001/pkgs/cuda-11.7/targets/x86_64-linux/lib/"
-SINGULARITY_IMAGE = "/model-weights/vec-inf-shared/vector-inference_latest.sif"
-SINGULARITY_LOAD_CMD = "module load singularity-ce/3.8.2"
-APPTAINER_IMAGE = "/model-weights/vec-inf-shared/vector-inference_latest.sif"
-APPTAINER_LOAD_CMD = "module load apptainer/1.2.0"
+# Default container images - use official vLLM Docker image as fallback
+SINGULARITY_IMAGE = "docker://vllm/vllm-openai:latest"
+SINGULARITY_LOAD_CMD = "# Singularity available at /usr/bin/singularity"
+APPTAINER_IMAGE = "docker://vllm/vllm-openai:latest"
+APPTAINER_LOAD_CMD = "# Apptainer available at /usr/bin/apptainer"
 VLLM_NCCL_SO_PATH = "/vec-inf/nccl/libnccl.so.2.18.1"
 MAX_GPUS_PER_NODE = 8
 MAX_NUM_NODES = 16
