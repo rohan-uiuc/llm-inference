@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.4.1-devel-ubuntu20.04
+FROM nnvidia/cuda:12.8.1-devel-ubi9
 
 # Non-interactive apt-get commands
 ARG DEBIAN_FRONTEND=noninteractive
