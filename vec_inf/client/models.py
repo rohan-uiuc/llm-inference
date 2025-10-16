@@ -216,6 +216,8 @@ class LaunchOptions:
         Parent directory containing model weights
     vllm_args : str, optional
         Additional arguments for vLLM
+    container_image : str, optional
+        Path to container image file (.sif) to override default container path
     """
 
     model_family: Optional[str] = None
@@ -235,6 +237,7 @@ class LaunchOptions:
     log_dir: Optional[str] = None
     model_weights_parent_dir: Optional[str] = None
     vllm_args: Optional[str] = None
+    container_image: Optional[str] = None
 
 
 @dataclass

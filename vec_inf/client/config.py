@@ -70,7 +70,7 @@ class ModelConfig(BaseModel):
     configured to be immutable (frozen) and forbids extra fields.
     """
 
-    model_name: str = Field(..., min_length=3, pattern=r"^[a-zA-Z0-9\-_\.]+$")
+    model_name: str = Field(..., min_length=3, pattern=r"^[a-zA-Z0-9\-_\.\/]+$")
     model_family: str = Field(..., min_length=2)
     model_variant: Optional[str] = Field(
         default=None, description="Specific variant/version of the model family"
@@ -119,7 +119,7 @@ class ModelConfig(BaseModel):
         default=None, description="Additional binds for the singularity container"
     )
     venv: str = Field(
-        default="singularity", description="Virtual environment/container system (singularity, apptainer, or path to venv)"
+        default="singularity", description="Container system to use ('singularity', 'apptainer', or path to venv). Uses official vLLM Docker image by default unless container_image is specified."
     )
     log_dir: Path = Field(
         default=Path(cast(str, DEFAULT_ARGS["log_dir"])),
@@ -131,6 +131,9 @@ class ModelConfig(BaseModel):
     )
     vllm_args: Optional[dict[str, Any]] = Field(
         default={}, description="vLLM engine arguments"
+    )
+    container_image: Optional[str] = Field(
+        default=None, description="Container image to use. Can be a .sif file path or Docker URI (e.g., 'docker://vllm/vllm-openai:latest'). If not specified, uses the official vLLM Docker image."
     )
 
     @field_validator("venv")
