@@ -21,7 +21,7 @@ class SlurmScriptGenerator:
 
     This class handles the generation of Slurm scripts for both single-node and
     multi-node configurations, supporting different virtualization environments
-    (venv or singularity).
+    (venv or singularity/apptainer).
 
     Parameters
     ----------
@@ -32,70 +32,105 @@ class SlurmScriptGenerator:
     def __init__(self, params: dict[str, Any]):
         self.params = params
         self.is_multinode = int(self.params["num_nodes"]) > 1
-        self.use_singularity = self.params["venv"] == "singularity"
-        self.use_apptainer = self.params["venv"] == "apptainer"
+        self.use_container = (
+            self.params["venv"] == "singularity" or self.params["venv"] == "apptainer"
+        )
         self.additional_binds = self.params.get("bind", "")
         if self.additional_binds:
             self.additional_binds = f" --bind {self.additional_binds}"
-        self.model_weights_path = str(
-            Path(self.params["model_weights_parent_dir"], self.params["model_name"])
+        model_weights_path = Path(
+            self.params["model_weights_parent_dir"], self.params["model_name"]
         )
-        # Override container image if specified
-        self.container_image = self.params.get("container_image")
-    
-    def _get_container_command(self, container_type: str) -> str:
-        """Get the container command with optional image override.
+        model_weights_path.mkdir(parents=True, exist_ok=True)
+        self.model_weights_path = str(model_weights_path)
+        env_dict: dict[str, str] = self.params.get("env", {})
+        # Create string of environment variables
+        self.env_str = ""
+        for key, val in env_dict.items():
+            if len(self.env_str) == 0:
+                self.env_str = "--env "
+            else:
+                self.env_str += ","
+            self.env_str += key + "=" + val
+        
+        # Get HF cache dir from params (CLI/config) or environment variable
+        import os
+        self.hf_cache_dir = self.params.get("hf_cache_dir") or os.getenv("HF_CACHE_DIR")
 
-        Parameters
-        ----------
-        container_type : str
-            Type of container ("singularity" or "apptainer")
-            
+    def _get_env_vars(self) -> list[str]:
+        """Get environment variables, including HF cache vars if configured.
+        
+        Returns
+        -------
+        list[str]
+            List of environment variable export commands
+        """
+        from vec_inf.client.slurm_vars import LD_LIBRARY_PATH, VLLM_NCCL_SO_PATH
+        
+        env_vars = [
+            f"export LD_LIBRARY_PATH={LD_LIBRARY_PATH}",
+            f"export VLLM_NCCL_SO_PATH={VLLM_NCCL_SO_PATH}",
+        ]
+        
+        if self.hf_cache_dir:
+            env_vars += [
+                f"export HF_HOME={self.hf_cache_dir}",
+                f"export TRANSFORMERS_CACHE={self.hf_cache_dir}/transformers",
+                "mkdir -p $HF_HOME",
+                "mkdir -p $TRANSFORMERS_CACHE",
+                "export APPTAINERENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
+                "export SINGULARITYENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
+                "export APPTAINERENV_HF_HOME=$HF_HOME",
+                "export SINGULARITYENV_HF_HOME=$HF_HOME",
+                "export APPTAINERENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
+                "export SINGULARITYENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
+            ]
+        
+        return env_vars
+
+    def _get_container_command(self) -> str:
+        """Get the container command with HF cache bind if configured.
+        
         Returns
         -------
         str
-            Formatted container command
+            Container command string
         """
-        # Check if we're using a Hugging Face model ID by checking if local weights exist
-        # If model_weights_path doesn't exist, assume it's a HF model ID
-        model_weights_path = Path(self.params.get("model_weights_parent_dir", "/tmp"), self.params.get("model_name", ""))
-        is_hf_model = not model_weights_path.exists()
+        from vec_inf.client.slurm_vars import SINGULARITY_IMAGE, APPTAINER_IMAGE
         
-        # Determine which container image to use
-        from .slurm_vars import SINGULARITY_IMAGE, APPTAINER_IMAGE
-        container_image = self.container_image if self.container_image else (
-            SINGULARITY_IMAGE if container_type == "singularity" 
-            else APPTAINER_IMAGE
+        container_type = "singularity" if self.params["venv"] == "singularity" else "apptainer"
+        container_image = self.params.get("container_image") or (
+            SINGULARITY_IMAGE if container_type == "singularity" else APPTAINER_IMAGE
         )
-        
-        # Check if this is a Docker URI (starts with docker://)
         is_docker_uri = container_image.startswith("docker://")
         
-        # Build the base command and forward CUDA + HuggingFace cache env vars into container
+        # Build base command
         if container_type == "singularity":
-            base_cmd = (
-                "singularity exec --nv --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES "
-                "--env HF_HOME=$HF_HOME --env TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE"
-            )
-        else:  # apptainer
-            base_cmd = (
-                "apptainer exec --nv --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES "
-                "--env HF_HOME=$HF_HOME --env TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE"
-            )
-        
-        # Always bind HuggingFace cache path for downloads
-        cache_bind = " --bind /projects/illinois/ovcri/ncsa/rohan13/huggingface"
-
-        # Add binds (model weights + cache + additional binds)
-        if is_hf_model:
-            binds = f"{cache_bind}{self.additional_binds}"
+            base_cmd = "singularity exec --nv"
         else:
-            binds = f" --bind {self.model_weights_path}{cache_bind}{self.additional_binds}"
+            base_cmd = "apptainer exec --nv"
+        
+        # Add HF cache bind if configured
+        hf_cache_bind = ""
+        if self.hf_cache_dir:
+            try:
+                if Path(self.hf_cache_dir).exists():
+                    hf_cache_bind = f" --bind {self.hf_cache_dir}"
+            except Exception:
+                pass  # Skip bind if path doesn't exist
+        
+        # Build bind mounts
+        binds = f" --bind {self.model_weights_path}{hf_cache_bind}{self.additional_binds}"
         
         # Add containall flag only for .sif files (not Docker URIs)
         containall_flag = "" if is_docker_uri else " --containall"
         
-        return f"{base_cmd}{binds}{containall_flag} {container_image} \\"
+        # Add HF env vars if configured
+        env_vars = ""
+        if self.hf_cache_dir:
+            env_vars = f" --env HF_HOME={self.hf_cache_dir} --env TRANSFORMERS_CACHE={self.hf_cache_dir}/transformers"
+        
+        return f"{base_cmd}{env_vars}{binds}{containall_flag} {container_image} \\"
 
     def _generate_script_content(self) -> str:
         """Generate the complete Slurm script content.
@@ -139,35 +174,20 @@ class SlurmScriptGenerator:
             Server initialization script content.
         """
         server_script = ["\n"]
-        if self.use_singularity:
-            if self.container_image:
-                server_script.append(f"singularity exec {self.container_image} ray stop")
-            else:
-                server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["singularity_setup"]))
-        elif self.use_apptainer:
-            if self.container_image:
-                server_script.append(f"apptainer exec {self.container_image} ray stop")
-            else:
-                server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["apptainer_setup"]))
-        server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["env_vars"]))
+        if self.use_container:
+            server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["container_setup"]))
+        server_script.append("\n".join(self._get_env_vars()))
         server_script.append(
             SLURM_SCRIPT_TEMPLATE["imports"].format(src_dir=self.params["src_dir"])
         )
         if self.is_multinode:
             server_setup_str = "\n".join(
                 SLURM_SCRIPT_TEMPLATE["server_setup"]["multinode"]
-            )
-            if self.use_singularity:
-                container_cmd = self._get_container_command("singularity")
+            ).format(gpus_per_node=self.params["gpus_per_node"])
+            if self.use_container:
                 server_setup_str = server_setup_str.replace(
-                    "SINGULARITY_PLACEHOLDER",
-                    container_cmd,
-                )
-            elif self.use_apptainer:
-                container_cmd = self._get_container_command("apptainer")
-                server_setup_str = server_setup_str.replace(
-                    "SINGULARITY_PLACEHOLDER",
-                    container_cmd,
+                    "CONTAINER_PLACEHOLDER",
+                    self._get_container_command(),
                 )
         else:
             server_setup_str = "\n".join(
@@ -175,12 +195,9 @@ class SlurmScriptGenerator:
             )
         server_script.append(server_setup_str)
         server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["find_vllm_port"]))
-        # Sanitize model name for file paths (replace "/" with "-")
-        safe_model_name = self.params["model_name"].replace("/", "-")
-        
         server_script.append(
             "\n".join(SLURM_SCRIPT_TEMPLATE["write_to_json"]).format(
-                log_dir=self.params["log_dir"], model_name=safe_model_name
+                log_dir=self.params["log_dir"], model_name=self.params["model_name"]
             )
         )
         return "\n".join(server_script)
@@ -189,7 +206,7 @@ class SlurmScriptGenerator:
         """Generate the vLLM server launch command.
 
         Creates the command to launch the vLLM server, handling different virtualization
-        environments (venv or singularity).
+        environments (venv or singularity/apptainer).
 
         Returns
         -------
@@ -197,45 +214,27 @@ class SlurmScriptGenerator:
             Server launch command.
         """
         launcher_script = ["\n"]
-        if self.use_singularity:
-            launcher_script.append(
-                self._get_container_command("singularity")
-            )
-        elif self.use_apptainer:
-            launcher_script.append(
-                self._get_container_command("apptainer")
-            )
+
+        # Check if --model is specified in vllm_args to use HuggingFace model name
+        model_path = self.model_weights_path
+        vllm_args_copy = self.params["vllm_args"].copy()
+        if "--model" in vllm_args_copy:
+            model_path = vllm_args_copy.pop("--model")
+
+        if self.use_container:
+            launcher_script.append(self._get_container_command())
         else:
             launcher_script.append(
                 SLURM_SCRIPT_TEMPLATE["activate_venv"].format(venv=self.params["venv"])
             )
-        # Check if we're using a Hugging Face model ID by checking if local weights exist
-        # If model_weights_path doesn't exist, assume it's a HF model ID
-        model_weights_path = Path(self.params.get("model_weights_parent_dir", "/tmp"), self.params.get("model_name", ""))
-        is_hf_model = not model_weights_path.exists()
-        model_name = self.params.get("model_name")
-        
-        if is_hf_model:
-            # Use Hugging Face model ID directly
-            launcher_script.append(
-                "\n".join(SLURM_SCRIPT_TEMPLATE["launch_cmd"]).format(
-                    model_weights_path=model_name,
-                    model_name=model_name.split("/")[-1],  # Use just the model name part
-                )
+        launcher_script.append(
+            "\n".join(SLURM_SCRIPT_TEMPLATE["launch_cmd"]).format(
+                model_weights_path=model_path,
+                model_name=self.params["model_name"],
             )
-        else:
-            # Use local model path
-            launcher_script.append(
-                "\n".join(SLURM_SCRIPT_TEMPLATE["launch_cmd"]).format(
-                    model_weights_path=self.model_weights_path,
-                    model_name=self.params["model_name"],
-                )
-            )
+        )
 
-        for arg, value in self.params["vllm_args"].items():
-            # Skip --model argument if we're using HF model ID as positional argument
-            if is_hf_model and arg == "--model":
-                continue
+        for arg, value in vllm_args_copy.items():
             if isinstance(value, bool):
                 launcher_script.append(f"    {arg} \\")
             else:
@@ -253,11 +252,9 @@ class SlurmScriptGenerator:
             Path to the generated Slurm script file.
         """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        # Sanitize model name for file paths (replace "/" with "-")
-        safe_model_name = self.params["model_name"].replace("/", "-")
         script_path: Path = (
             Path(self.params["log_dir"])
-            / f"launch_{safe_model_name}_{timestamp}.slurm"
+            / f"launch_{self.params['model_name']}_{timestamp}.sbatch"
         )
 
         content = self._generate_script_content()
@@ -275,20 +272,108 @@ class BatchSlurmScriptGenerator:
     def __init__(self, params: dict[str, Any]):
         self.params = params
         self.script_paths: list[Path] = []
-        self.use_singularity = self.params["venv"] == "singularity"
-        self.use_apptainer = self.params["venv"] == "apptainer"
+        self.use_container = (
+            self.params["venv"] == "singularity" or self.params["venv"] == "apptainer"
+        )
+        # Get HF cache dir from params (CLI/config) or environment variable
+        import os
+        self.hf_cache_dir = self.params.get("hf_cache_dir") or os.getenv("HF_CACHE_DIR")
         for model_name in self.params["models"]:
             self.params["models"][model_name]["additional_binds"] = ""
             if self.params["models"][model_name].get("bind"):
                 self.params["models"][model_name]["additional_binds"] = (
                     f" --bind {self.params['models'][model_name]['bind']}"
                 )
-            self.params["models"][model_name]["model_weights_path"] = str(
-                Path(
-                    self.params["models"][model_name]["model_weights_parent_dir"],
-                    model_name,
-                )
+            model_weights_path = Path(
+                self.params["models"][model_name]["model_weights_parent_dir"],
+                model_name,
             )
+            model_weights_path.mkdir(parents=True, exist_ok=True)
+            self.params["models"][model_name]["model_weights_path"] = str(
+                model_weights_path
+            )
+
+    def _get_batch_env_vars(self) -> list[str]:
+        """Get environment variables for batch mode, including HF cache vars if configured.
+        
+        Returns
+        -------
+        list[str]
+            List of environment variable export commands
+        """
+        from vec_inf.client.slurm_vars import LD_LIBRARY_PATH, VLLM_NCCL_SO_PATH
+        
+        env_vars = [
+            f"export LD_LIBRARY_PATH={LD_LIBRARY_PATH}",
+            f"export VLLM_NCCL_SO_PATH={VLLM_NCCL_SO_PATH}",
+        ]
+        
+        if self.hf_cache_dir:
+            env_vars += [
+                f"export HF_HOME={self.hf_cache_dir}",
+                f"export TRANSFORMERS_CACHE={self.hf_cache_dir}/transformers",
+                "mkdir -p $HF_HOME",
+                "mkdir -p $TRANSFORMERS_CACHE",
+                "export APPTAINERENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
+                "export SINGULARITYENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
+                "export APPTAINERENV_HF_HOME=$HF_HOME",
+                "export SINGULARITYENV_HF_HOME=$HF_HOME",
+                "export APPTAINERENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
+                "export SINGULARITYENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
+            ]
+        
+        return env_vars
+
+    def _get_batch_container_command(self, model_weights_path: str, additional_binds: str) -> str:
+        """Get the container command for batch mode with HF cache bind if configured.
+        
+        Parameters
+        ----------
+        model_weights_path : str
+            Path to model weights
+        additional_binds : str
+            Additional bind mounts
+            
+        Returns
+        -------
+        str
+            Container command string
+        """
+        from vec_inf.client.slurm_vars import SINGULARITY_IMAGE, APPTAINER_IMAGE
+        
+        container_type = "singularity" if self.params["venv"] == "singularity" else "apptainer"
+        container_image = self.params.get("container_image") or (
+            SINGULARITY_IMAGE if container_type == "singularity" else APPTAINER_IMAGE
+        )
+        is_docker_uri = container_image.startswith("docker://")
+        
+        # Build base command
+        if container_type == "singularity":
+            base_cmd = "singularity exec --nv"
+        else:
+            base_cmd = "apptainer exec --nv"
+        
+        # Add HF cache bind if configured
+        hf_cache_bind = ""
+        if self.hf_cache_dir:
+            try:
+                if Path(self.hf_cache_dir).exists():
+                    hf_cache_bind = f" --bind {self.hf_cache_dir}"
+            except Exception:
+                pass  # Skip bind if path doesn't exist
+        
+        # Build bind mounts
+        binds = f" --bind {model_weights_path}{hf_cache_bind}{additional_binds}"
+        
+        # Add containall flag only for .sif files (not Docker URIs)
+        containall_flag = "" if is_docker_uri else " --containall"
+        
+        # Add HF env vars if configured
+        env_vars = ""
+        if self.hf_cache_dir:
+            env_vars = f" --env HF_HOME={self.hf_cache_dir} --env TRANSFORMERS_CACHE={self.hf_cache_dir}/transformers"
+        
+        return f"{base_cmd}{env_vars}{binds}{containall_flag} {container_image} \\"
 
     def _write_to_log_dir(self, script_content: list[str], script_name: str) -> Path:
         """Write the generated Slurm script to the log directory.
@@ -320,6 +405,7 @@ class BatchSlurmScriptGenerator:
         script_content = []
         model_params = self.params["models"][model_name]
         script_content.append(BATCH_MODEL_LAUNCH_SCRIPT_TEMPLATE["shebang"])
+        script_content.append("\n".join(self._get_batch_env_vars()))
         script_content.append(
             "\n".join(
                 BATCH_MODEL_LAUNCH_SCRIPT_TEMPLATE["server_address_setup"]
@@ -333,31 +419,32 @@ class BatchSlurmScriptGenerator:
                 model_name=model_name,
             )
         )
-        if self.use_singularity:
+        # Check if --model is specified in vllm_args to use HuggingFace model name
+        model_path = model_params["model_weights_path"]
+        vllm_args_copy = model_params["vllm_args"].copy()
+        if "--model" in vllm_args_copy:
+            model_path = vllm_args_copy.pop("--model")
+
+        if self.use_container:
             script_content.append(
-                BATCH_MODEL_LAUNCH_SCRIPT_TEMPLATE["singularity_command"].format(
-                    model_weights_path=model_params["model_weights_path"],
-                    additional_binds=model_params["additional_binds"],
-                )
-            )
-        elif self.use_apptainer:
-            script_content.append(
-                BATCH_MODEL_LAUNCH_SCRIPT_TEMPLATE["apptainer_command"].format(
-                    model_weights_path=model_params["model_weights_path"],
-                    additional_binds=model_params["additional_binds"],
+                self._get_batch_container_command(
+                    model_params["model_weights_path"],
+                    model_params["additional_binds"],
                 )
             )
         script_content.append(
             "\n".join(BATCH_MODEL_LAUNCH_SCRIPT_TEMPLATE["launch_cmd"]).format(
-                model_weights_path=model_params["model_weights_path"],
+                model_weights_path=model_path,
                 model_name=model_name,
             )
         )
-        for arg, value in model_params["vllm_args"].items():
+        
+        for arg, value in vllm_args_copy.items():
             if isinstance(value, bool):
                 script_content.append(f"    {arg} \\")
             else:
                 script_content.append(f"    {arg} {value} \\")
+        script_content[-1] = script_content[-1].replace("\\", "")
         # Write the bash script to the log directory
         launch_script_path = self._write_to_log_dir(
             script_content, f"launch_{model_name}.sh"
@@ -373,16 +460,19 @@ class BatchSlurmScriptGenerator:
         str
             The shebang for batch mode Slurm script.
         """
-        shebang = [
-            BATCH_SLURM_SCRIPT_TEMPLATE["shebang"].format(
-                out_file=self.params["out_file"], err_file=self.params["err_file"]
-            )
-        ]
+        shebang = [BATCH_SLURM_SCRIPT_TEMPLATE["shebang"]]
+
+        for arg, value in SLURM_JOB_CONFIG_ARGS.items():
+            if self.params.get(value):
+                shebang.append(f"#SBATCH --{arg}={self.params[value]}")
+        shebang.append("#SBATCH --ntasks=1")
+        shebang.append("\n")
+
         for model_name in self.params["models"]:
             shebang.append(f"# ===== Resource group for {model_name} =====")
             for arg, value in SLURM_JOB_CONFIG_ARGS.items():
                 model_params = self.params["models"][model_name]
-                if model_params.get(value):
+                if model_params.get(value) and value not in ["out_file", "err_file"]:
                     shebang.append(f"#SBATCH --{arg}={model_params[value]}")
             shebang[-1] += "\n"
             shebang.append(BATCH_SLURM_SCRIPT_TEMPLATE["hetjob"])
@@ -401,11 +491,6 @@ class BatchSlurmScriptGenerator:
         script_content = []
 
         script_content.append(self._generate_batch_slurm_script_shebang())
-        if self.use_singularity:
-            script_content.append(BATCH_SLURM_SCRIPT_TEMPLATE["singularity_setup"])
-        elif self.use_apptainer:
-            script_content.append(BATCH_SLURM_SCRIPT_TEMPLATE["apptainer_setup"])
-        script_content.append("\n".join(BATCH_SLURM_SCRIPT_TEMPLATE["env_vars"]))
 
         for model_name in self.params["models"]:
             model_params = self.params["models"][model_name]
@@ -427,5 +512,5 @@ class BatchSlurmScriptGenerator:
         script_content.append("wait")
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        script_name = f"{self.params['slurm_job_name']}_{timestamp}.slurm"
+        script_name = f"{self.params['slurm_job_name']}_{timestamp}.sbatch"
         return self._write_to_log_dir(script_content, script_name)

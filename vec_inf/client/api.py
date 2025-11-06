@@ -79,9 +79,17 @@ class VecInfClient:
     >>> client.shutdown_model(job_id)
     """
 
-    def __init__(self) -> None:
-        """Initialize the Vector Inference client."""
-        pass
+    def __init__(self, hf_cache_dir: Optional[str] = None) -> None:
+        """Initialize the Vector Inference client.
+        
+        Parameters
+        ----------
+        hf_cache_dir : str, optional
+            Default HuggingFace cache directory to use for all launches.
+            Can be overridden per-launch via LaunchOptions.
+            If not set, uses HF_CACHE_DIR environment variable.
+        """
+        self.default_hf_cache_dir = hf_cache_dir
 
     def list_models(self) -> list[ModelInfo]:
         """List all available models.
@@ -147,6 +155,10 @@ class VecInfClient:
         options_dict: dict[str, Any] = {}
         if options:
             options_dict = {k: v for k, v in vars(options).items() if v is not None}
+        
+        # Apply default hf_cache_dir from client if not specified in options
+        if self.default_hf_cache_dir and "hf_cache_dir" not in options_dict:
+            options_dict["hf_cache_dir"] = self.default_hf_cache_dir
 
         # Create and use the API Launch Helper
         model_launcher = ModelLauncher(model_name, options_dict)

@@ -90,6 +90,11 @@ def cli() -> None:
     help="Additional binds for the singularity container as a comma separated list of bind paths",
 )
 @click.option(
+    "--hf-cache-dir",
+    type=str,
+    help="HuggingFace cache directory to bind into containers. If not set, uses HF_CACHE_DIR environment variable.",
+)
+@click.option(
     "--time",
     type=str,
     help="Time limit for job, this should comply with QoS limits",

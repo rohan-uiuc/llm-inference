@@ -1,8 +1,17 @@
 """Slurm cluster configuration variables."""
 
 from pathlib import Path
+import os
 
 from typing_extensions import Literal
+
+# Load environment variables from .env file if it exists
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # python-dotenv not installed, skip .env loading
+    pass
 
 
 CACHED_CONFIG = Path("/", "model-weights", "vec-inf-shared", "models_latest.yaml")
@@ -50,3 +59,8 @@ DEFAULT_ARGS = {
     "log_dir": "~/.vec-inf-logs",
     "model_weights_parent_dir": "/model-weights",
 }
+
+# Optional host-side HuggingFace cache directory to bind into containers.
+# If set, code will forward HF cache env vars and bind this path conditionally.
+# Can be set via environment variable HF_CACHE_DIR or .env file.
+HF_CACHE_DIR = os.getenv("HF_CACHE_DIR")

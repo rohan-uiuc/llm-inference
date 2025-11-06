@@ -118,6 +118,9 @@ class ModelConfig(BaseModel):
     bind: Optional[str] = Field(
         default=None, description="Additional binds for the singularity container"
     )
+    hf_cache_dir: Optional[str] = Field(
+        default=None, description="HuggingFace cache directory to bind into containers. If not set, uses HF_CACHE_DIR environment variable."
+    )
     venv: str = Field(
         default="singularity", description="Container system to use ('singularity', 'apptainer', or path to venv). Uses official vLLM Docker image by default unless container_image is specified."
     )

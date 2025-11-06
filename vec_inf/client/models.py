@@ -230,6 +230,7 @@ class LaunchOptions:
     exclude: Optional[str] = None
     nodelist: Optional[str] = None
     bind: Optional[str] = None
+    hf_cache_dir: Optional[str] = None
     time: Optional[str] = None
     vocab_size: Optional[int] = None
     data_type: Optional[str] = None

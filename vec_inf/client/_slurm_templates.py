@@ -106,27 +106,16 @@ SLURM_SCRIPT_TEMPLATE: SlurmScriptTemplate = {
         f"apptainer exec {'--containall' if not APPTAINER_IMAGE.startswith('docker://') else ''} {APPTAINER_IMAGE} ray stop",
     ],
     "imports": "source {src_dir}/find_port.sh",
+    # Note: env_vars are now generated dynamically in SlurmScriptGenerator._get_env_vars()
+    # This template entry is kept for backward compatibility but is not used
     "env_vars": [
         f"export LD_LIBRARY_PATH={LD_LIBRARY_PATH}",
         f"export VLLM_NCCL_SO_PATH={VLLM_NCCL_SO_PATH}",
-        # HuggingFace cache on a large-volume filesystem
-        # TODO: Make this configurable
-        "export HF_HOME=/projects/illinois/ovcri/ncsa/rohan13/huggingface",
-        "export TRANSFORMERS_CACHE=/projects/illinois/ovcri/ncsa/rohan13/huggingface/transformers",
-        # Ensure directories exist
-        "mkdir -p $HF_HOME",
-        "mkdir -p $TRANSFORMERS_CACHE",
-        # Forward scheduler-assigned CUDA devices into container runtime
-        "export APPTAINERENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
-        "export SINGULARITYENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
-        # Forward HuggingFace cache env vars into container runtime
-        "export APPTAINERENV_HF_HOME=$HF_HOME",
-        "export SINGULARITYENV_HF_HOME=$HF_HOME",
-        "export APPTAINERENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
-        "export SINGULARITYENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
     ],
-    "singularity_command": f"singularity exec --nv --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES --env HF_HOME=$HF_HOME --env TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE --bind {{model_weights_path}},/projects/illinois/ovcri/ncsa/rohan13/huggingface{{additional_binds}} {'--containall' if not SINGULARITY_IMAGE.startswith('docker://') else ''} {SINGULARITY_IMAGE} \\",
-    "apptainer_command": f"apptainer exec --nv --env CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES --env HF_HOME=$HF_HOME --env TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE --bind {{model_weights_path}},/projects/illinois/ovcri/ncsa/rohan13/huggingface{{additional_binds}} {'--containall' if not APPTAINER_IMAGE.startswith('docker://') else ''} {APPTAINER_IMAGE} \\",
+    # Note: container commands are now generated dynamically in SlurmScriptGenerator._get_container_command()
+    # These template entries are kept for backward compatibility but are not used
+    "singularity_command": f"singularity exec --nv --bind {{model_weights_path}}{{additional_binds}} {'--containall' if not SINGULARITY_IMAGE.startswith('docker://') else ''} {SINGULARITY_IMAGE} \\",
+    "apptainer_command": f"apptainer exec --nv --bind {{model_weights_path}}{{additional_binds}} {'--containall' if not APPTAINER_IMAGE.startswith('docker://') else ''} {APPTAINER_IMAGE} \\",
     "activate_venv": "source {venv}/bin/activate",
     "server_setup": {
         "single_node": [
