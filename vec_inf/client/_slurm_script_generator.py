@@ -41,7 +41,13 @@ class SlurmScriptGenerator:
         model_weights_path = Path(
             self.params["model_weights_parent_dir"], self.params["model_name"]
         )
-        model_weights_path.mkdir(parents=True, exist_ok=True)
+        # Try to create directory locally, but don't fail if we don't have permission
+        # The directory will be created on the cluster when the script runs
+        try:
+            model_weights_path.mkdir(parents=True, exist_ok=True)
+        except (PermissionError, OSError):
+            # Directory creation will happen on the cluster node
+            pass
         self.model_weights_path = str(model_weights_path)
         env_dict: dict[str, str] = self.params.get("env", {})
         # Create string of environment variables
@@ -73,17 +79,25 @@ class SlurmScriptGenerator:
         ]
         
         if self.hf_cache_dir:
+            # Check if HF cache dir exists on cluster node before using it
             env_vars += [
-                f"export HF_HOME={self.hf_cache_dir}",
-                f"export TRANSFORMERS_CACHE={self.hf_cache_dir}/transformers",
-                "mkdir -p $HF_HOME",
-                "mkdir -p $TRANSFORMERS_CACHE",
-                "export APPTAINERENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
-                "export SINGULARITYENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
-                "export APPTAINERENV_HF_HOME=$HF_HOME",
-                "export SINGULARITYENV_HF_HOME=$HF_HOME",
-                "export APPTAINERENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
-                "export SINGULARITYENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
+                f"HF_CACHE_DIR={self.hf_cache_dir}",
+                "if [ -d \"$HF_CACHE_DIR\" ]; then",
+                "  export HF_HOME=$HF_CACHE_DIR",
+                "  export TRANSFORMERS_CACHE=$HF_CACHE_DIR/transformers",
+                "  mkdir -p $HF_HOME",
+                "  mkdir -p $TRANSFORMERS_CACHE",
+                "  export APPTAINERENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
+                "  export SINGULARITYENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
+                "  export APPTAINERENV_HF_HOME=$HF_HOME",
+                "  export SINGULARITYENV_HF_HOME=$HF_HOME",
+                "  export APPTAINERENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
+                "  export SINGULARITYENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
+                "  export HF_CACHE_BIND=\" --bind $HF_CACHE_DIR\"",
+                "else",
+                "  echo \"WARNING: HF cache directory $HF_CACHE_DIR does not exist on this node, skipping bind\"",
+                "  export HF_CACHE_BIND=\"\"",
+                "fi",
             ]
         
         return env_vars
@@ -111,13 +125,9 @@ class SlurmScriptGenerator:
             base_cmd = "apptainer exec --nv"
         
         # Add HF cache bind if configured
-        hf_cache_bind = ""
-        if self.hf_cache_dir:
-            try:
-                if Path(self.hf_cache_dir).exists():
-                    hf_cache_bind = f" --bind {self.hf_cache_dir}"
-            except Exception:
-                pass  # Skip bind if path doesn't exist
+        # The bind is conditionally set in the script based on whether the path exists
+        # on the cluster node. We use $HF_CACHE_BIND variable set in _get_env_vars().
+        hf_cache_bind = "${HF_CACHE_BIND:-}"
         
         # Build bind mounts
         binds = f" --bind {self.model_weights_path}{hf_cache_bind}{self.additional_binds}"
@@ -126,9 +136,11 @@ class SlurmScriptGenerator:
         containall_flag = "" if is_docker_uri else " --containall"
         
         # Add HF env vars if configured
+        # These are set conditionally in the script based on whether the path exists
+        # on the cluster node. We use $HF_HOME and $TRANSFORMERS_CACHE variables.
         env_vars = ""
         if self.hf_cache_dir:
-            env_vars = f" --env HF_HOME={self.hf_cache_dir} --env TRANSFORMERS_CACHE={self.hf_cache_dir}/transformers"
+            env_vars = " --env HF_HOME=$HF_HOME --env TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE"
         
         return f"{base_cmd}{env_vars}{binds}{containall_flag} {container_image} \\"
 
@@ -288,7 +300,13 @@ class BatchSlurmScriptGenerator:
                 self.params["models"][model_name]["model_weights_parent_dir"],
                 model_name,
             )
-            model_weights_path.mkdir(parents=True, exist_ok=True)
+            # Try to create directory locally, but don't fail if we don't have permission
+            # The directory will be created on the cluster when the script runs
+            try:
+                model_weights_path.mkdir(parents=True, exist_ok=True)
+            except (PermissionError, OSError):
+                # Directory creation will happen on the cluster node
+                pass
             self.params["models"][model_name]["model_weights_path"] = str(
                 model_weights_path
             )
@@ -309,17 +327,25 @@ class BatchSlurmScriptGenerator:
         ]
         
         if self.hf_cache_dir:
+            # Check if HF cache dir exists on cluster node before using it
             env_vars += [
-                f"export HF_HOME={self.hf_cache_dir}",
-                f"export TRANSFORMERS_CACHE={self.hf_cache_dir}/transformers",
-                "mkdir -p $HF_HOME",
-                "mkdir -p $TRANSFORMERS_CACHE",
-                "export APPTAINERENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
-                "export SINGULARITYENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
-                "export APPTAINERENV_HF_HOME=$HF_HOME",
-                "export SINGULARITYENV_HF_HOME=$HF_HOME",
-                "export APPTAINERENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
-                "export SINGULARITYENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
+                f"HF_CACHE_DIR={self.hf_cache_dir}",
+                "if [ -d \"$HF_CACHE_DIR\" ]; then",
+                "  export HF_HOME=$HF_CACHE_DIR",
+                "  export TRANSFORMERS_CACHE=$HF_CACHE_DIR/transformers",
+                "  mkdir -p $HF_HOME",
+                "  mkdir -p $TRANSFORMERS_CACHE",
+                "  export APPTAINERENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
+                "  export SINGULARITYENV_CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES",
+                "  export APPTAINERENV_HF_HOME=$HF_HOME",
+                "  export SINGULARITYENV_HF_HOME=$HF_HOME",
+                "  export APPTAINERENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
+                "  export SINGULARITYENV_TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE",
+                "  export HF_CACHE_BIND=\" --bind $HF_CACHE_DIR\"",
+                "else",
+                "  echo \"WARNING: HF cache directory $HF_CACHE_DIR does not exist on this node, skipping bind\"",
+                "  export HF_CACHE_BIND=\"\"",
+                "fi",
             ]
         
         return env_vars
@@ -354,13 +380,9 @@ class BatchSlurmScriptGenerator:
             base_cmd = "apptainer exec --nv"
         
         # Add HF cache bind if configured
-        hf_cache_bind = ""
-        if self.hf_cache_dir:
-            try:
-                if Path(self.hf_cache_dir).exists():
-                    hf_cache_bind = f" --bind {self.hf_cache_dir}"
-            except Exception:
-                pass  # Skip bind if path doesn't exist
+        # The bind is conditionally set in the script based on whether the path exists
+        # on the cluster node. We use $HF_CACHE_BIND variable set in _get_batch_env_vars().
+        hf_cache_bind = "${HF_CACHE_BIND:-}"
         
         # Build bind mounts
         binds = f" --bind {model_weights_path}{hf_cache_bind}{additional_binds}"
@@ -369,9 +391,11 @@ class BatchSlurmScriptGenerator:
         containall_flag = "" if is_docker_uri else " --containall"
         
         # Add HF env vars if configured
+        # These are set conditionally in the script based on whether the path exists
+        # on the cluster node. We use $HF_HOME and $TRANSFORMERS_CACHE variables.
         env_vars = ""
         if self.hf_cache_dir:
-            env_vars = f" --env HF_HOME={self.hf_cache_dir} --env TRANSFORMERS_CACHE={self.hf_cache_dir}/transformers"
+            env_vars = " --env HF_HOME=$HF_HOME --env TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE"
         
         return f"{base_cmd}{env_vars}{binds}{containall_flag} {container_image} \\"
 
