@@ -187,7 +187,10 @@ class SlurmScriptGenerator:
         """
         server_script = ["\n"]
         if self.use_container:
-            server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE["container_setup"]))
+            # Determine container type and use appropriate setup
+            container_type = "singularity" if self.params["venv"] == "singularity" else "apptainer"
+            setup_key = f"{container_type}_setup"
+            server_script.append("\n".join(SLURM_SCRIPT_TEMPLATE[setup_key]))
         server_script.append("\n".join(self._get_env_vars()))
         server_script.append(
             SLURM_SCRIPT_TEMPLATE["imports"].format(src_dir=self.params["src_dir"])
