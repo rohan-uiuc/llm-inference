@@ -22,7 +22,7 @@ required_args:
 default_args:
   cpus_per_task: "16"
   mem_per_node: "64G"
-  time: "08:00:00"
+  time: "00:10:00"
   qos: ""
   partition: ""
   resource_type: ""
