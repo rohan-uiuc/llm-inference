@@ -1,8 +1,8 @@
 paths:
-  image_path: "/model-weights/vec-inf-shared/vector-inference_latest.sif"
+  image_path: "/projects/bfmz/dadams/ai-flux/containers/llm_processor.sif"
 
 containerization:
-  module_load_cmd: "module load apptainer"
+  module_load_cmd: ""  # No module needed on Delta
   module_name: "apptainer"
 
 limits:
@@ -11,9 +11,9 @@ limits:
   max_cpus_per_task: 64
 
 allowed_values:
-  qos: []
-  partition: []
-  resource_type: ["l40s", "h100"]
+  qos: ["bfmz-delta-gpu"]
+  partition: ["gpuA40x4", "gpuA100x4", "gpuA40x4-interactive", "gpuA100x4-interactive"]
+  resource_type: ["a40", "a100"]
 
 required_args:
   account: "VEC_INF_ACCOUNT"
@@ -24,12 +24,12 @@ default_args:
   mem_per_node: "64G"
   time: "08:00:00"
   qos: ""
-  partition: ""
-  resource_type: ""
+  partition: "gpuA40x4-interactive"
+  resource_type: ""  # Empty to avoid gres on Delta - Slurm picks GPU from partition
   exclude: ""
   nodelist: ""
   bind: ""
-  venv: "apptainer"
+  venv: "apptainer"  # Use container mode
   data_type: "auto"
   log_dir: "~/.vec-inf-logs"
-  model_weights_parent_dir: "/model-weights"
+  model_weights_parent_dir: "/projects/bfmz/dadams/model-weights"
