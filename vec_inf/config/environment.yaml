@@ -32,4 +32,4 @@ default_args:
   venv: "apptainer"  # Use container mode
   data_type: "auto"
   log_dir: "~/.vec-inf-logs"
-  model_weights_parent_dir: "/projects/bfmz/dadams/model-weights"
+  model_weights_parent_dir: "/projects/bfmz/model-weights"
