@@ -55,7 +55,21 @@ To overwrite default `vllm serve` arguments, you can specify the arguments in a 
 vec-inf launch Meta-Llama-3.1-8B-Instruct --vllm-args '--max-model-len=65536,--compilation-config=3'
 ```
 
-To download models directly from HuggingFace Hub without needing local weights, use `--hf-model`:
+To download models directly from HuggingFace Hub without needing local weights, you can either:
+
+1. **Set `hf_model` in `models.yaml`** – Add the HuggingFace model id to your model config so you don't need to pass it each time:
+
+```yaml
+models:
+  Qwen2.5-7B-Instruct:
+    model_family: Qwen2.5
+    model_variant: 7B-Instruct
+    model_type: LLM
+    hf_model: Qwen/Qwen2.5-7B-Instruct
+    # ... other fields
+```
+
+2. **Use `--hf-model` on the CLI** – Override or specify the HuggingFace model id at launch:
 
 ```bash
 vec-inf launch Qwen2.5-3B-Instruct \
@@ -64,7 +78,7 @@ vec-inf launch Qwen2.5-3B-Instruct \
   --vllm-args '--max-model-len=4096'
 ```
 
-Set `HF_HOME` via `--env` to control where models are cached. If local weights exist, they take priority over `--hf-model`.
+Set `HF_HOME` via `--env` to control where models are cached. If local weights exist, they take priority over `hf_model`.
 
 For the full list of `vllm serve` arguments, you can find them [here](https://docs.vllm.ai/en/stable/serving/engine_args.html), make sure you select the correct vLLM version.
 

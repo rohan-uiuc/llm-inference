@@ -1,8 +1,12 @@
+# hf_model: Optional HuggingFace model id (e.g. "meta-llama/Meta-Llama-3.1-8B-Instruct").
+# When set, vLLM downloads from HuggingFace Hub when local weights don't exist.
+# CLI --hf-model overrides this value.
 models:
   c4ai-command-r-plus-08-2024:
     model_family: c4ai-command-r
     model_variant: plus-08-2024
     model_type: LLM
+    hf_model: CohereForAI/c4ai-command-r-plus-08-2024
     gpus_per_node: 4
     num_nodes: 2
     vocab_size: 256000
@@ -16,6 +20,7 @@ models:
     model_family: c4ai-command-r
     model_variant: 08-2024
     model_type: LLM
+    hf_model: CohereForAI/c4ai-command-r-08-2024
     gpus_per_node: 2
     num_nodes: 1
     vocab_size: 256000
@@ -28,6 +33,7 @@ models:
     model_family: CodeLlama
     model_variant: 7b-hf
     model_type: LLM
+    hf_model: codellama/CodeLlama-7b-hf
     gpus_per_node: 1
     num_nodes: 1
     vocab_size: 32000
@@ -347,6 +353,7 @@ models:
     model_family: Meta-Llama-3.1
     model_variant: 8B-Instruct
     model_type: LLM
+    hf_model: meta-llama/Meta-Llama-3.1-8B-Instruct
     gpus_per_node: 1
     num_nodes: 1
     vocab_size: 128256
@@ -395,6 +402,7 @@ models:
     model_family: Mistral
     model_variant: 7B-Instruct-v0.1
     model_type: LLM
+    hf_model: mistralai/Mistral-7B-Instruct-v0.1
     gpus_per_node: 1
     num_nodes: 1
     vocab_size: 32000
@@ -672,6 +680,7 @@ models:
     model_family: Qwen2.5
     model_variant: 7B-Instruct
     model_type: LLM
+    hf_model: Qwen/Qwen2.5-7B-Instruct
     gpus_per_node: 1
     num_nodes: 1
     vocab_size: 152064
