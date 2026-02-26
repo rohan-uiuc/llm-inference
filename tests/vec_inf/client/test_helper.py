@@ -155,6 +155,21 @@ class TestModelLauncher:
         assert params["vllm_args"]["--num-scheduler-steps"] == "16"
 
     @patch("vec_inf.client._helper.utils.load_config")
+    def test_get_launch_params_includes_hf_model_from_config(
+        self, mock_load_config, model_config
+    ):
+        """Test _get_launch_params includes hf_model when set in config."""
+        config_with_hf = model_config.model_copy(
+            update={"hf_model": "meta-llama/Meta-Llama-3.1-8B-Instruct"}
+        )
+        mock_load_config.return_value = [config_with_hf]
+
+        launcher = ModelLauncher("test-model", {})
+        params = launcher.params
+
+        assert params["hf_model"] == "meta-llama/Meta-Llama-3.1-8B-Instruct"
+
+    @patch("vec_inf.client._helper.utils.load_config")
     def test_get_launch_params_with_multi_gpu_no_tp(
         self, mock_load_config, model_config
     ):
